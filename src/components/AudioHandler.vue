@@ -29,13 +29,25 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
+import Vue, { PropType } from "vue";
 import { cartesianToPolar } from "@/helpers/vectors";
-
-// cartesianToPolar();
+import { PlayerPosition } from "@/helpers/interfaces";
 
 export default Vue.extend({
   name: "AudioHandler",
+  props: {
+    stream: {
+      type: MediaStream,
+      required: true
+    },
+    pos: {
+      type: Object as PropType<PlayerPosition>,
+      required: true,
+      validator(message: PlayerPosition) {
+        return !!message.x;
+      }
+    }
+  },
   data: () => {
     return {
       mediaStream: null as MediaStream | null,
@@ -126,6 +138,25 @@ export default Vue.extend({
 
       window.requestAnimationFrame(tick);
     };
+
+    const speakerEl = document.querySelector("#speaker");
+
+    if (speakerEl != null)
+      speakerEl.addEventListener("touchmove", (_event: Event) => {
+        const event = _event as TouchEvent;
+        const x = event.touches[0].clientX;
+        const y = event.touches[0].clientY - 40;
+
+        const bounds = document.body.getBoundingClientRect();
+        const center = [bounds.width / 2, bounds.height / 2];
+
+        const relativePos = [(x - center[0]) / 5, -(y - center[1]) / 5];
+
+        this.posX = relativePos[0];
+        this.posZ = relativePos[1];
+        panner.positionX.value = Math.round(relativePos[0]);
+        panner.positionZ.value = Math.round(relativePos[1]);
+      });
 
     setTimeout(() => {
       audioNode.play();

@@ -3,7 +3,7 @@
 const RAD2DEG = 180 / Math.PI;
 const DEG2RAD = Math.PI / 180;
 
-interface Vector3 {
+export interface Vector3 {
   x: number;
   y: number;
   z: number;
