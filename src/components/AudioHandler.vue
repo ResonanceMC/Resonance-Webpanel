@@ -1,23 +1,38 @@
 <template>
-  <div>
-    <div id="player"></div>
-    <audio
-      id="music"
-      src="@/assets/The Musical Guy - Other Guy.mp3"
-      preload="auto"
-      loop
-    ></audio>
-    <div
-      id="speaker"
-      :style="
-        `top: calc(50% - ${posZ * 5}px); left: calc(50% + ${posX * 5}px);`
-      "
-    ></div>
-  </div>
+  <transition name="fade" appear>
+    <v-container fill-height fluid>
+      <v-main>
+        <div id="player" />
+        <audio
+          id="music"
+          src="@/assets/The Musical Guy - Other Guy.mp3"
+          preload="auto"
+          loop
+        />
+        <div
+          id="speaker"
+          :style="
+            `top: calc(50% - ${posZ * 5}px); left: calc(50% + ${posX * 5}px);`
+          "
+        />
+      </v-main>
+      <!--    </v-fade-transition>-->
+      <v-progress-linear
+        :active="loading"
+        top
+        indeterminate
+        fixed
+        height="8px"
+      />
+    </v-container>
+  </transition>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
+import { cartesianToPolar } from "@/helpers/vectors";
+
+// cartesianToPolar();
 
 export default Vue.extend({
   name: "AudioHandler",
@@ -27,7 +42,8 @@ export default Vue.extend({
       audioCtx: null as AudioContext | null,
       panner: null as PannerNode | null,
       posX: 0,
-      posZ: 0
+      posZ: 0,
+      loading: true
     };
   },
   async mounted() {
@@ -57,7 +73,9 @@ export default Vue.extend({
 
     const audioNode = document.querySelector("#music") as HTMLMediaElement;
 
-    audioNode.play().then();
+    audioNode.addEventListener("play", () => {
+      this.loading = false;
+    });
 
     const source = audioCtx.createMediaElementSource(audioNode);
     const panner: PannerNode = (this.panner = audioCtx.createPanner());
@@ -70,10 +88,13 @@ export default Vue.extend({
     panner.coneInnerAngle = 360;
     panner.coneOuterAngle = 0;
     panner.coneOuterGain = 0;
+    positionPanner(panner, 0, 0, 0);
+
+    // audioCtx.listener.positionZ.value = 100;
+    audioCtx.listener.forwardZ.value = 1;
 
     source.connect(panner);
     panner.connect(audioCtx.destination);
-    positionPanner(panner, 0, 0, 0);
 
     const keys: { [key in string]?: boolean } = {
       w: false,
@@ -106,6 +127,10 @@ export default Vue.extend({
       window.requestAnimationFrame(tick);
     };
 
+    setTimeout(() => {
+      audioNode.play();
+    }, 500);
+
     window.requestAnimationFrame(tick);
   },
   destroyed() {
@@ -116,7 +141,7 @@ export default Vue.extend({
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 #speaker {
   width: 50px;
   height: 50px;
@@ -133,5 +158,15 @@ export default Vue.extend({
   width: 30px;
   height: 30px;
   background-color: lightcoral;
+}
+
+.fade-enter-active {
+  transition: all 0.3s ease;
+}
+.fade-leave-active {
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

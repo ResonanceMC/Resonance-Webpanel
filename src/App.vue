@@ -1,11 +1,21 @@
 <template>
-  <div id="app">
-    <div id="nav">
+  <v-app id="app">
+    <OverlayLoader :active="!$auth.loaded"></OverlayLoader>
+    <v-dialog :value="$auth.error" max-width="fit-content">
+      <v-card>
+        <v-card-title class="justify-center headline pa-5">
+          {{ $auth.error }}
+        </v-card-title>
+      </v-card>
+    </v-dialog>
+    <v-container fluid id="nav">
       <router-link to="/">Home</router-link> |
       <router-link to="/audio">Audio Test</router-link>
-    </div>
-    <router-view />
-  </div>
+    </v-container>
+    <v-main>
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 
 <style lang="scss">
@@ -30,3 +40,9 @@
   }
 }
 </style>
+<script>
+import OverlayLoader from "@/components/OverlayLoader";
+export default {
+  components: { OverlayLoader }
+};
+</script>

@@ -11,10 +11,12 @@
     "class-transformer": "^0.3.2",
     "core-js": "^3.6.5",
     "reflect-metadata": "^0.1.13",
+    "sharp": "^0.27.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^3.2.0",
+    "vuetify": "^2.4.0",
     "vuex": "^3.4.0"
   },
   "devDependencies": {
@@ -33,9 +35,12 @@
     "eslint-plugin-vue": "^6.2.2",
     "node-sass": "^4.12.0",
     "prettier": "^1.19.1",
-    "sass-loader": "^8.0.2",
+    "sass": "^1.32.0",
+    "sass-loader": "^10.0.0",
     "typescript": "~3.9.3",
-    "vue-template-compiler": "^2.6.11"
+    "vue-cli-plugin-vuetify": "~2.1.0",
+    "vue-template-compiler": "^2.6.11",
+    "vuetify-loader": "^1.7.2"
   },
   "eslintConfig": {
     "root": true,
@@ -53,7 +58,10 @@
       "ecmaVersion": 2020
     },
     "rules": {
-      "consistent-this": [2, "self"]
+      "consistent-this": [
+        2,
+        "self"
+      ]
     }
   },
   "browserslist": [

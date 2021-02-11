@@ -1,5 +1,9 @@
 <template>
-  <AudioHandler />
+  <!--  <v-fade-transition hide-on-leave>-->
+  <v-container class="overflow-hidden" fill-height fluid>
+    <AudioHandler />
+  </v-container>
+  <!--  </v-fade-transition>-->
 </template>
 
 <script lang="ts">
