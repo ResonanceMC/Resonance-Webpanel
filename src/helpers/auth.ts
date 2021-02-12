@@ -17,8 +17,13 @@ export function InitializeAuthComponent(
       } as AuthInterface;
     },
     computed: {
-      token: function(): string {
-        return this.$store.state.token.value;
+      token: {
+        get(): string {
+          return this.$store.state.token.value;
+        },
+        set(val: string | undefined): void {
+          this.$store.commit("setToken", val);
+        }
       }
     },
     methods: {
@@ -52,9 +57,9 @@ export function InitializeAuthComponent(
           console.log(data.action);
           console.log(data.body.token);
           if (data.action == "authenticated") {
-            this.$store.commit("setToken", data.token);
+            this.token = data.token;
           } else if (data.action == "authentication_failed") {
-            this.$store.commit("setToken", undefined);
+            this.token = undefined;
           } else if (data.action == "keep_alive") {
             socket.send(
               JSON.stringify({
