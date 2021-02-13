@@ -9,6 +9,12 @@ export interface Vector3 {
   z: number;
 }
 
+export interface SphericalVector {
+  lon: number;
+  lat: number;
+  radius: number;
+}
+
 /**
  * Convert [lat,lon] polar coordinates to [x,y,z] cartesian coordinates
  * @param {Number} lon
@@ -16,11 +22,11 @@ export interface Vector3 {
  * @param {Number} radius
  * @return {Vector3}
  */
-export function polarToCartesian(
-  lon: number,
-  lat: number,
-  radius: number
-): Vector3 {
+export function sphericalToCartesian({
+  lon,
+  lat,
+  radius
+}: SphericalVector): Vector3 {
   if (!lon || !lat || !radius) throw Error("Coordinate not valid.");
 
   const phi = (90 - lat) * DEG2RAD;
@@ -30,7 +36,7 @@ export function polarToCartesian(
     x: -(radius * Math.sin(phi) * Math.sin(theta)),
     y: radius * Math.cos(phi),
     z: radius * Math.sin(phi) * Math.cos(theta)
-  };
+  } as Vector3;
 }
 
 /**
@@ -38,11 +44,11 @@ export function polarToCartesian(
  * @param {Vector3} coord
  * @return {Array<Number>}
  */
-export function cartesianToPolar(coord: Vector3) {
+export function cartesianToSpherical(coord: Vector3): SphericalVector {
   if (!coord) throw Error("Coordinate not valid.");
   const lon = Math.atan2(coord.x, -coord.z) * RAD2DEG;
-  const length = Math.sqrt(coord.x * coord.x + coord.z * coord.z);
-  const lat = Math.atan2(coord.y, length) * RAD2DEG;
+  const radius = Math.sqrt(coord.x * coord.x + coord.z * coord.z);
+  const lat = Math.atan2(coord.y, radius) * RAD2DEG;
 
-  return [lon, lat];
+  return { lon, lat, radius } as SphericalVector;
 }

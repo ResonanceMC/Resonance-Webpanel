@@ -86,10 +86,8 @@ export function InitializeAuthComponent(
         try {
           const data = JSON.parse(event.data);
           console.log(data);
-          console.log(data.action);
-          console.log(data.body.token);
           if (data.action == "authenticated") {
-            this.token = data.token;
+            this.token = data.body.token;
           } else if (data.action == "authentication_failed") {
             this.token = undefined;
           } else if (data.action == "keep_alive") {

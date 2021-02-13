@@ -15,7 +15,6 @@
           placeholder="Ex: DYlbyU_vmYU"
           :loading="loading"
           :error="error"
-          background-color="white"
           height="40px"
           @blur="authToken"
           @keydown.enter="authToken"

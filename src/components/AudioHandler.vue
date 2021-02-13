@@ -67,13 +67,18 @@ export default Vue.extend({
     stream(val) {
       if (!(val instanceof MediaStream)) return;
       this.init();
+    },
+    pos({ x, y, z }: PlayerPosition) {
+      if (this.panner) {
+        this.positionPanner(this.panner, x, y, z);
+      }
     }
   },
   methods: {
     positionPanner(panner: PannerNode, x: number, y: number, z: number) {
       panner.positionX.setValueAtTime(x, panner.context.currentTime);
       panner.positionY.setValueAtTime(y, panner.context.currentTime);
-      panner.positionZ.setValueAtTime(z, panner.context.currentTime);
+      panner.positionZ.setValueAtTime(-z, panner.context.currentTime);
     },
     init() {
       const audioCtx: AudioContext = (this.audioCtx = new AudioContext());
@@ -100,7 +105,7 @@ export default Vue.extend({
       this.positionPanner(panner, this.pos.x, this.pos.y, this.pos.z);
 
       // audioCtx.listener.positionZ.value = 100;
-      audioCtx.listener.forwardZ.value = 1;
+      // audioCtx.listener.forwardZ.value = 1;
 
       source.connect(panner);
       panner.connect(audioCtx.destination);
@@ -134,7 +139,7 @@ export default Vue.extend({
         this.pos.z += pos.z;
         if (!this.panner) return;
         this.panner.positionX.value += pos.x;
-        this.panner.positionZ.value += pos.z;
+        this.panner.positionZ.value -= pos.z;
         // console.log(pos, this.posX);
 
         window.requestAnimationFrame(tick);
@@ -158,7 +163,7 @@ export default Vue.extend({
 
           if (!this.panner) return;
           this.panner.positionX.value = Math.round(relativePos[0]);
-          this.panner.positionZ.value = Math.round(relativePos[1]);
+          this.panner.positionZ.value = -Math.round(relativePos[1]);
         });
       window.requestAnimationFrame(tick);
     }

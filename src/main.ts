@@ -9,12 +9,10 @@ Vue.use(InitializeAuthComponent);
 
 Vue.config.productionTip = false;
 
+store.commit("retrieveLocalData");
 new Vue({
   router,
   store,
   vuetify,
-  render: h => h(App),
-  beforeCreate() {
-    store.commit("retrieveLocalData");
-  }
+  render: h => h(App)
 }).$mount("#app");
