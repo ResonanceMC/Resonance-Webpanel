@@ -5,6 +5,11 @@ import _Vue from "vue";
 
 let authInfo: _Vue;
 
+let socketQueueId = 0;
+const socketQueue: {
+  [key in string]: (value?: string | PromiseLike<string> | undefined) => void;
+} = {};
+
 export function InitializeAuthComponent(
   Vue: typeof _Vue,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -14,7 +19,7 @@ export function InitializeAuthComponent(
     data() {
       return {
         loaded: false
-      } as AuthInterface;
+      } as InnerAuthInterface;
     },
     computed: {
       token: {
@@ -27,12 +32,29 @@ export function InitializeAuthComponent(
       }
     },
     methods: {
-      sendWS: function(data: string): void {
-        if (!this.socket) throw Error("Socket is not defined yet.");
-        if (this.socket.readyState != this.socket.OPEN)
-          return console.error("Socket is in a closing/non-open state.");
+      // eslint-disable-next-line
+      sendWS(data: Record<string, any>): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+          if (!this.socket) throw Error("Socket is not defined yet.");
+          if (this.socket.readyState != this.socket.OPEN) {
+            console.error("Socket is in a closing/non-open state.");
+            reject();
+          }
 
-        this.socket.send(data);
+          socketQueue["i_" + socketQueueId] = resolve;
+          socketQueueId++;
+
+          this.socket.send(JSON.stringify({ id: socketQueueId, ...data }));
+        });
+      },
+      async authToken(token: string): Promise<boolean> {
+        const sendData = {
+          action: "authenticate",
+          body: { token }
+        };
+
+        const returnedData = JSON.parse(await this.sendWS(sendData));
+        return returnedData.action == "authenticated";
       }
     },
     created() {
@@ -68,6 +90,15 @@ export function InitializeAuthComponent(
               })
             );
           }
+
+          if (
+            typeof data["id"] != "undefined" &&
+            typeof socketQueue["i_" + data["id"]] == "function"
+          ) {
+            const execFunc = socketQueue["i_" + data["id"]];
+            execFunc(data);
+            delete socketQueue["i_" + data["cmd_id"]];
+          }
         } catch {
           console.log(event.data);
         }
@@ -82,10 +113,15 @@ export function InitializeAuthComponent(
   Vue.prototype.$auth = authInfo;
 }
 
-export interface AuthInterface {
+interface InnerAuthInterface {
   token?: string;
   user?: { username: string; uuid: string };
   loaded: boolean;
   socket?: WebSocket;
   error?: string;
+}
+
+export interface AuthInterface extends InnerAuthInterface {
+  sendWS(token: string): Promise<string>;
+  authToken(data: string): Promise<boolean>;
 }

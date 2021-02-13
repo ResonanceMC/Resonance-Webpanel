@@ -1,23 +1,36 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
-import Audio from "@/views/Audio.vue";
+import store from "@/store/index";
 
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
   {
     path: "/",
-    name: "Home",
-    component: Home
+    name: "home",
+    component: () => import(/* webpackChunkName: "home" */ "@/views/Home.vue")
+  },
+  {
+    path: "/token/:token",
+    name: "login",
+    component: () =>
+      import(/* webpackChunkName: "login" */ "@/views/Login.vue"),
+    beforeEnter(_to, _from, next) {
+      !store.state.token ? next() : next({ name: "home" });
+    }
   },
   {
     path: "/audio",
-    name: "Audio Test",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: Audio
+    name: "audio-test",
+    component: () =>
+      import(/* webpackChunkName: "audio" */ "@/views/Audio.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "*",
+    name: "404-error",
+    component: () =>
+      import(/* webpackChunkName: "404" */ "@/views/PageNotFound.vue")
   }
 ];
 
@@ -26,4 +39,9 @@ const router = new VueRouter({
   routes
 });
 
+router.beforeEach((to, _from, next) => {
+  if (to.matched.some(route => route.meta.requiresAuth) && !store.state.token) {
+    next({ name: "login" });
+  } else next();
+});
 export default router;

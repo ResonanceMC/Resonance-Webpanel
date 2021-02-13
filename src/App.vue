@@ -9,8 +9,8 @@
       </v-card>
     </v-dialog>
     <v-container fluid id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/audio">Audio Test</router-link>
+      <router-link :to="{ name: 'home' }">Home</router-link> |
+      <router-link :to="{ name: 'audio-test' }">Audio Test</router-link>
     </v-container>
     <v-main>
       <router-view />
