@@ -12,7 +12,7 @@
         class="pt-3"
         autofocus
         placeholder="Ex: DYlbyU_vmYU"
-        :loading="!$auth.loaded"
+        :loading="loading"
         background-color="white"
         height="40px"
         @blur="authToken"
