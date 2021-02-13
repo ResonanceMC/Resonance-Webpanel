@@ -22,3 +22,9 @@ export interface IncomingPosition {
   position?: PlayerPosition;
   inRange: boolean;
 }
+
+export interface WSMessage {
+  id: number;
+  action: string;
+  body: Record<string, never>;
+}

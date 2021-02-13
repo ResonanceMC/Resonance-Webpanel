@@ -39,6 +39,16 @@
     }
   }
 }
+// fade transitions
+.fade-enter-active {
+  transition: all 0.3s ease;
+}
+.fade-leave-active {
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
 </style>
 <script>
 import OverlayLoader from "@/components/OverlayLoader";

@@ -2,12 +2,16 @@ const PORT = "";
 const HOST = "thiccaxe.net/ws";
 
 import _Vue from "vue";
+import store from "@/store/index";
+import { WSMessage } from "@/helpers/interfaces";
 
 let authInfo: _Vue;
 
 let socketQueueId = 0;
 const socketQueue: {
-  [key in string]: (value?: string | PromiseLike<string> | undefined) => void;
+  [key in string]: (
+    value?: WSMessage | PromiseLike<WSMessage> | undefined
+  ) => void;
 } = {};
 
 export function InitializeAuthComponent(
@@ -23,18 +27,18 @@ export function InitializeAuthComponent(
     },
     computed: {
       token: {
-        get(): string {
-          return this.$store.state.token.value;
+        get(): string | undefined {
+          return store.state.token;
         },
         set(val: string | undefined): void {
-          this.$store.commit("setToken", val);
+          store.commit("setToken", val);
         }
       }
     },
     methods: {
       // eslint-disable-next-line
-      sendWS(data: Record<string, any>): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
+      sendWS(data: Record<string, any>): Promise<WSMessage> {
+        return new Promise<WSMessage>((resolve, reject) => {
           if (!this.socket) throw Error("Socket is not defined yet.");
           if (this.socket.readyState != this.socket.OPEN) {
             console.error("Socket is in a closing/non-open state.");
@@ -42,9 +46,9 @@ export function InitializeAuthComponent(
           }
 
           socketQueue["i_" + socketQueueId] = resolve;
-          socketQueueId++;
-
           this.socket.send(JSON.stringify({ id: socketQueueId, ...data }));
+
+          socketQueueId++;
         });
       },
       async authToken(token: string): Promise<boolean> {
@@ -53,8 +57,14 @@ export function InitializeAuthComponent(
           body: { token }
         };
 
-        const returnedData = JSON.parse(await this.sendWS(sendData));
-        return returnedData.action == "authenticated";
+        try {
+          const data = await this.sendWS(sendData);
+          return data.action == "authenticated";
+        } catch {
+          this.error =
+            "WebSocket connection is closed!\nPlease try again later.";
+          return false;
+        }
       }
     },
     created() {
@@ -91,16 +101,13 @@ export function InitializeAuthComponent(
             );
           }
 
-          if (
-            typeof data["id"] != "undefined" &&
-            typeof socketQueue["i_" + data["id"]] == "function"
-          ) {
-            const execFunc = socketQueue["i_" + data["id"]];
-            execFunc(data);
-            delete socketQueue["i_" + data["cmd_id"]];
+          console.log(data.id, socketQueue["i_" + data.id]);
+          if (data.id != undefined && socketQueue["i_" + data.id]) {
+            socketQueue["i_" + data.id](data);
+            delete socketQueue["i_" + data.id];
           }
-        } catch {
-          console.log(event.data);
+        } catch (e) {
+          console.log(e);
         }
       };
 

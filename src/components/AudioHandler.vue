@@ -182,14 +182,4 @@ export default Vue.extend({
   position: absolute;
   transform: translate(-50%, -50%);
 }
-
-.fade-enter-active {
-  transition: all 0.3s ease;
-}
-.fade-leave-active {
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>
