@@ -38,6 +38,8 @@ import { AudioContext } from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
+const audioCtx = new AudioContext();
+
 export default Vue.extend({
   name: "Audio",
   data() {
@@ -68,39 +70,44 @@ export default Vue.extend({
       const audioNode = document.querySelector("#music") as HTMLMediaElement;
       audioNode.play();
       this.manualAudio = false;
+      // this.audioCtx.resume();
+      // audioCtx.resume();
+      this.testMediaStream();
     },
     testMediaStream() {
-      // interface MediaElement extends HTMLMediaElement {
-      //   captureStream(frameRate?: number): MediaStream;
-      // }
-
       const audioNode = document.querySelector("#music") as HTMLMediaElement;
-      const audioCtx = new AudioContext();
+      // const audioCtx = new AudioContext();
       audioCtx.resume();
 
       const source = audioCtx.createMediaElementSource(audioNode);
 
       const audioDestinationNode = audioCtx.createMediaStreamDestination();
+      const audioDestinationNode2 = audioCtx.createMediaStreamDestination();
 
       source.connect(audioDestinationNode);
+      source.connect(audioDestinationNode2);
 
-      audioNode.addEventListener("play", () => {
-        this.$set(this.players[0], "stream", audioDestinationNode.stream);
-        this.$set(this.players[1], "stream", audioDestinationNode.stream);
-      });
-
-      setTimeout(() => {
-        audioNode.play().catch(() => {
-          this.manualAudio = true;
-        });
-      }, 500);
+      // audioNode.addEventListener("play", () => {
+      this.$set(this.players[0], "stream", audioDestinationNode.stream);
+      this.$set(this.players[1], "stream", audioDestinationNode2.stream);
+      // });
     }
   },
   mounted() {
     // if (!navigator.mediaDevices)
     //   throw new Error("On unsecure connection, cannot establish microphone.");
 
-    this.testMediaStream();
+    const audioNode = document.querySelector("#music") as HTMLMediaElement;
+    setTimeout(() => {
+      audioNode.play().then(
+        () => {
+          this.testMediaStream();
+        },
+        () => {
+          this.manualAudio = true;
+        }
+      );
+    }, 500);
 
     console.log(this);
 
