@@ -1,6 +1,11 @@
 <template>
   <transition name="fade" appear>
-    <v-container fill-height fluid>
+    <v-container
+      fill-height
+      fluid
+      style="position: absolute; top:0; left:0"
+      class="overflow-hidden"
+    >
       <v-main>
         <v-tooltip top>
           <template v-slot:activator="{ on }">
@@ -33,6 +38,9 @@
 import Vue, { PropType } from "vue";
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
+import { AudioContext, PannerNode } from "standardized-audio-context";
+
+// const AudioContext = window.AudioContext || window.webkitAudioContext;
 
 export default Vue.extend({
   name: "AudioHandler",
@@ -51,13 +59,17 @@ export default Vue.extend({
       validator: function(obj: never) {
         return "data" in obj;
       }
+    },
+    audioCtx: {
+      type: AudioContext,
+      required: true
     }
   },
   data: () => {
     return {
       // mediaStream: null as MediaStream | null,
-      audioCtx: null as AudioContext | null,
-      panner: null as PannerNode | null,
+      // audioCtx: null as AudioContext | null,
+      panner: null as PannerNode<AudioContext> | null,
       // posX: 0,
       // posZ: 0,
       loading: true
@@ -75,13 +87,24 @@ export default Vue.extend({
     }
   },
   methods: {
-    positionPanner(panner: PannerNode, x: number, y: number, z: number) {
-      panner.positionX.setValueAtTime(x, panner.context.currentTime);
-      panner.positionY.setValueAtTime(y, panner.context.currentTime);
-      panner.positionZ.setValueAtTime(-z, panner.context.currentTime);
+    positionPanner(
+      panner: PannerNode<AudioContext>,
+      x: number,
+      y: number,
+      z: number
+    ) {
+      try {
+        panner.positionX.setValueAtTime(x, panner.context.currentTime);
+        panner.positionY.setValueAtTime(y, panner.context.currentTime);
+        panner.positionZ.setValueAtTime(-z, panner.context.currentTime);
+      } catch {
+        // panner.setPosition(x, y, z);
+      }
     },
     init() {
-      const audioCtx: AudioContext = (this.audioCtx = new AudioContext());
+      const audioCtx: AudioContext = this.audioCtx;
+
+      audioCtx.resume();
 
       // const source = audioCtx.createMediaElementSource(audioNode);
 
@@ -92,10 +115,10 @@ export default Vue.extend({
 
       this.loading = false;
 
-      const panner: PannerNode = (this.panner = audioCtx.createPanner());
+      const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
 
       panner.panningModel = "HRTF";
-      panner.distanceModel = "inverse";
+      panner.distanceModel = "linear";
       panner.refDistance = 20;
       panner.maxDistance = 130;
       panner.rolloffFactor = 1;
@@ -138,9 +161,7 @@ export default Vue.extend({
         this.pos.x += pos.x;
         this.pos.z += pos.z;
         if (!this.panner) return;
-        this.panner.positionX.value += pos.x;
-        this.panner.positionZ.value -= pos.z;
-        // console.log(pos, this.posX);
+        this.positionPanner(this.panner, this.pos.x, this.pos.y, this.pos.z);
 
         window.requestAnimationFrame(tick);
       };
@@ -162,8 +183,12 @@ export default Vue.extend({
           this.pos.z = relativePos[1];
 
           if (!this.panner) return;
-          this.panner.positionX.value = Math.round(relativePos[0]);
-          this.panner.positionZ.value = -Math.round(relativePos[1]);
+          this.positionPanner(
+            this.panner,
+            Math.round(relativePos[0]),
+            this.pos.y,
+            Math.round(relativePos[1])
+          );
         });
       window.requestAnimationFrame(tick);
     }
@@ -172,7 +197,7 @@ export default Vue.extend({
     if (this.stream) this.init();
   },
   destroyed() {
-    this.audioCtx?.close();
+    // this.audioCtx?.close();
     this.panner?.disconnect();
     console.log("Closed audio.");
   }
@@ -186,5 +211,6 @@ export default Vue.extend({
   background-color: #2c3e50;
   position: absolute;
   transform: translate(-50%, -50%);
+  z-index: 5;
 }
 </style>

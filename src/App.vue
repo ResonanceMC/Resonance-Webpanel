@@ -11,6 +11,13 @@
     <v-container fluid id="nav">
       <router-link :to="{ name: 'home' }">Home</router-link> |
       <router-link :to="{ name: 'audio-test' }">Audio Test</router-link>
+      <span v-if="$auth.authed"> | </span>
+      <router-link
+        v-if="$auth.authed"
+        :to="{ name: 'login' }"
+        @click.native="$auth.logout"
+        >Logout</router-link
+      >
     </v-container>
     <v-main>
       <router-view />

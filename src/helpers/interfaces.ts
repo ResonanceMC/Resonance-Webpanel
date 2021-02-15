@@ -11,6 +11,20 @@ export class PlayerPosition implements Vector3 {
   inRange = true;
   facing?: [number, number];
 
+  constructor({
+    x = 0,
+    y = 0,
+    z = 0,
+    inRange = true,
+    facing = undefined
+  } = {}) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.inRange = inRange;
+    this.facing = facing;
+  }
+
   /**
    * Normalize speaker player position to match directionality of listener
    * @param player Listener player

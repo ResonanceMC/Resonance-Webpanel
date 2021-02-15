@@ -11,3 +11,9 @@ declare global {
     }
   }
 }
+// declare global {
+//   interface Window {
+//     webkitAudioContext: typeof AudioContext;
+//     webkitAudioPannerNode: typeof PannerNode;
+//   }
+// }

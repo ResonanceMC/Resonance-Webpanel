@@ -1,8 +1,9 @@
 const PORT = "";
 const HOST = "thiccaxe.net/ws";
 
-import _Vue from "vue";
+import router from "@/router";
 import store from "@/store/index";
+import _Vue from "vue";
 import { WSMessage } from "@/helpers/interfaces";
 
 let authInfo: _Vue;
@@ -22,7 +23,8 @@ export function InitializeAuthComponent(
   authInfo = new _Vue({
     data() {
       return {
-        loaded: false
+        loaded: false,
+        authed: false
       } as InnerAuthInterface;
     },
     computed: {
@@ -37,7 +39,7 @@ export function InitializeAuthComponent(
     },
     methods: {
       // eslint-disable-next-line
-      sendWS(data: Record<string, any>): Promise<WSMessage> {
+      sendWS(data: Record<string, any>, sendBearer?: boolean): Promise<WSMessage> {
         return new Promise<WSMessage>((resolve, reject) => {
           if (!this.socket) throw Error("Socket is not defined yet.");
           if (this.socket.readyState != this.socket.OPEN) {
@@ -45,12 +47,15 @@ export function InitializeAuthComponent(
             reject();
           }
 
+          if (sendBearer) data["bearer"] = this.token;
+
           socketQueue["i_" + socketQueueId] = resolve;
           this.socket.send(JSON.stringify({ id: socketQueueId, ...data }));
 
           socketQueueId++;
         });
       },
+
       async authToken(token: string): Promise<boolean> {
         const sendData = {
           action: "authenticate",
@@ -65,6 +70,14 @@ export function InitializeAuthComponent(
             "WebSocket connection is closed!\nPlease try again later.";
           return false;
         }
+      },
+
+      logout() {
+        console.log("User has been logged out.");
+        this.token = undefined;
+        this.user = undefined;
+        this.authed = false;
+        router.replace({ name: "login" });
       }
     },
     created() {
@@ -72,13 +85,40 @@ export function InitializeAuthComponent(
         `wss://${HOST}${PORT ? ":" + PORT : ""}`
       ));
 
+      if (this.token) this.authed = true;
+
       socket.onerror = () => {
         this.loaded = true;
         this.error =
           "WebSocket connection has errored!\nPlease try again later.";
       };
 
-      socket.onopen = () => {
+      socket.onopen = async () => {
+        // check if authentication token is valid
+        /* --- UNCOMMENT ONCE IMPLEMENTED --- */
+        if (this.token) {
+          const timeoutHandler = setTimeout(() => {
+            this.loaded = true;
+            this.error = "Websocket took too long to respond!";
+          }, 5000);
+
+          const data = await this.sendWS(
+            {
+              action: "user_info"
+            },
+            true
+          );
+
+          clearTimeout(timeoutHandler);
+
+          if (data.action == "user_info") {
+            this.user = data.body.user;
+          } else {
+            this.token = undefined;
+            this.authed = false;
+          }
+        }
+
         this.loaded = true;
       };
 
@@ -88,6 +128,8 @@ export function InitializeAuthComponent(
           console.log(data);
           if (data.action == "authenticated") {
             this.token = data.body.token;
+            this.user = data.body.user;
+            this.authed = true;
           } else if (data.action == "authentication_failed") {
             this.token = undefined;
           } else if (data.action == "keep_alive") {
@@ -99,7 +141,6 @@ export function InitializeAuthComponent(
             );
           }
 
-          console.log(data.id, socketQueue["i_" + data.id]);
           if (data.id != undefined && socketQueue["i_" + data.id]) {
             socketQueue["i_" + data.id](data);
             delete socketQueue["i_" + data.id];
@@ -124,9 +165,11 @@ interface InnerAuthInterface {
   loaded: boolean;
   socket?: WebSocket;
   error?: string;
+  authed: boolean;
 }
 
 export interface AuthInterface extends InnerAuthInterface {
   sendWS(token: string): Promise<string>;
   authToken(data: string): Promise<boolean>;
+  logout(): void;
 }

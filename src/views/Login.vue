@@ -16,8 +16,6 @@
           :loading="loading"
           :error="error"
           height="40px"
-          @blur="authToken"
-          @keydown.enter="authToken"
         ></v-text-field>
       </v-container>
     </v-container>
@@ -26,19 +24,30 @@
 
 <script>
 import Vue from "vue";
+import debounce from "lodash/debounce";
 
 export default Vue.extend({
   name: "Login",
   data: () => {
     return {
-      inputToken: null,
+      inputToken: "",
       loading: false,
       error: false
     };
   },
+  watch: {
+    inputToken(token) {
+      if (token) this.debounceAuthToken();
+    }
+  },
   methods: {
+    debounceAuthToken() {
+      this.inputToken = this.inputToken.replace(/ /g, "");
+      if (!this._debounce) this._debounce = debounce(this.authToken, 400);
+      this._debounce();
+    },
     async authToken() {
-      if (!this.inputToken || this.loading) return;
+      if (this.inputToken.length === 0 || this.loading) return;
       this.loading = true;
       const result = await this.$auth.authToken(this.inputToken);
       this.loading = false;
