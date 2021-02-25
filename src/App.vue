@@ -21,6 +21,13 @@
 </template>
 
 <style lang="scss">
+html,
+body {
+  position: fixed;
+  overflow: hidden;
+  width: 100vw;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

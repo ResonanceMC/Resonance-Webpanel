@@ -18,9 +18,8 @@ const socketQueue: {
 const loadQueue: ((value?: PromiseLike<null>) => void)[] = [];
 
 export function InitializeAuthComponent(
-  Vue: typeof _Vue,
+  Vue: typeof _Vue
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  options?: never
 ): void {
   authInfo = new _Vue({
     data() {
@@ -92,7 +91,7 @@ export function InitializeAuthComponent(
         this.token = undefined;
         this.user = undefined;
         this.authed = false;
-        router.replace({ name: "login" });
+        router.replace({ name: "login" }).then();
       },
 
       waitLoad(): Promise<null> {
@@ -179,7 +178,7 @@ export function InitializeAuthComponent(
       // }, 1000);
     }
   });
-  Vue.prototype.$auth = authInfo;
+  Vue.prototype["$auth"] = authInfo;
 }
 
 interface InnerAuthInterface {

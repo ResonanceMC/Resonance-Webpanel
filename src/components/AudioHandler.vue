@@ -11,7 +11,8 @@
           <template v-slot:activator="{ on }">
             <div
               v-on="on"
-              id="speaker"
+              class="speaker"
+              :id="`speaker-${player.data.uuid}`"
               :style="
                 `top: calc(50% - ${pos.z * 5}px);
             left: calc(50% + ${pos.x * 5}px);`
@@ -166,7 +167,9 @@ export default Vue.extend({
         window.requestAnimationFrame(tick);
       };
 
-      const speakerEl = document.querySelector("#speaker");
+      const speakerEl = document.querySelector(
+        `#speaker-${this.player.data.uuid}`
+      );
 
       if (speakerEl != null)
         speakerEl.addEventListener("touchmove", (_event: Event) => {
@@ -205,7 +208,7 @@ export default Vue.extend({
 </script>
 
 <style scoped lang="scss">
-#speaker {
+.speaker {
   width: 50px;
   height: 50px;
   background-color: #2c3e50;
