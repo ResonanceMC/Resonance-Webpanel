@@ -8,7 +8,7 @@ interface AuthStore {
 }
 
 export default new Vuex.Store({
-  state: {} as AuthStore,
+  state: { token: undefined } as AuthStore,
   mutations: {
     retrieveLocalData(state) {
       const token = localStorage.getItem("token");
@@ -23,6 +23,11 @@ export default new Vuex.Store({
       state.token = token;
     }
   },
+  // getters: {
+  //   token: state => {
+  //     return state.token;
+  //   }
+  // },
   actions: {},
   modules: {}
 });

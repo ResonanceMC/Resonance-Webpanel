@@ -17,7 +17,8 @@ const routes: Array<RouteConfig> = [
       import(/* webpackChunkName: "login" */ "@/views/Login.vue"),
     beforeEnter(_to, _from, next) {
       !store.state.token ? next() : next({ name: "audio-test" });
-    }
+    },
+    props: true
   },
   {
     path: "/audio",

@@ -12,12 +12,7 @@
       <router-link :to="{ name: 'home' }">Home</router-link> |
       <router-link :to="{ name: 'audio-test' }">Audio Test</router-link>
       <span v-if="$auth.authed"> | </span>
-      <router-link
-        v-if="$auth.authed"
-        :to="{ name: 'login' }"
-        @click.native="$auth.logout"
-        >Logout</router-link
-      >
+      <a v-if="$auth.authed" href="" @click="logout">Logout</a>
     </v-container>
     <v-main>
       <router-view />
@@ -57,9 +52,17 @@
   opacity: 0;
 }
 </style>
-<script>
-import OverlayLoader from "@/components/OverlayLoader";
-export default {
-  components: { OverlayLoader }
-};
+<script lang="ts">
+import OverlayLoader from "@/components/OverlayLoader.vue";
+import Vue from "vue";
+
+export default Vue.extend({
+  components: { OverlayLoader },
+  methods: {
+    logout(e: MouseEvent) {
+      e.preventDefault();
+      this.$auth.logout();
+    }
+  }
+});
 </script>

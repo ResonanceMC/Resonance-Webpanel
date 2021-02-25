@@ -4,7 +4,7 @@ const HOST = "thiccaxe.net/ws";
 import router from "@/router";
 import store from "@/store/index";
 import _Vue from "vue";
-import { WSMessage } from "@/helpers/interfaces";
+import { Player, WSMessage } from "@/helpers/interfaces";
 
 let authInfo: _Vue;
 
@@ -15,6 +15,8 @@ const socketQueue: {
   ) => void;
 } = {};
 
+const loadQueue: ((value?: PromiseLike<null>) => void)[] = [];
+
 export function InitializeAuthComponent(
   Vue: typeof _Vue,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -24,7 +26,8 @@ export function InitializeAuthComponent(
     data() {
       return {
         loaded: false,
-        authed: false
+        authed: false,
+        user: {}
       } as InnerAuthInterface;
     },
     computed: {
@@ -37,9 +40,14 @@ export function InitializeAuthComponent(
         }
       }
     },
+    watch: {
+      loaded: val => {
+        if (val) loadQueue.forEach(r => r());
+      }
+    },
     methods: {
       // eslint-disable-next-line
-      sendWS(data: Record<string, any>, sendBearer?: boolean): Promise<WSMessage> {
+      sendWS(data: Record<string, any>, sendBearer?: boolean, expectReturn: boolean = true): Promise<WSMessage> {
         return new Promise<WSMessage>((resolve, reject) => {
           if (!this.socket) throw Error("Socket is not defined yet.");
           if (this.socket.readyState != this.socket.OPEN) {
@@ -49,10 +57,16 @@ export function InitializeAuthComponent(
 
           if (sendBearer) data["bearer"] = this.token;
 
-          socketQueue["i_" + socketQueueId] = resolve;
-          this.socket.send(JSON.stringify({ id: socketQueueId, ...data }));
+          if (expectReturn) {
+            socketQueue["i_" + socketQueueId] = resolve;
+            this.socket.send(JSON.stringify({ id: socketQueueId, ...data }));
 
-          socketQueueId++;
+            socketQueueId++;
+          } else {
+            console.trace(sendBearer, this.token, data);
+            this.socket.send(JSON.stringify(data));
+            resolve();
+          }
         });
       },
 
@@ -73,11 +87,19 @@ export function InitializeAuthComponent(
       },
 
       logout() {
+        this.sendWS({ action: "logout" }, true, false);
         console.log("User has been logged out.");
         this.token = undefined;
         this.user = undefined;
         this.authed = false;
         router.replace({ name: "login" });
+      },
+
+      waitLoad(): Promise<null> {
+        return new Promise<null>(resolve => {
+          if (this.loaded) resolve();
+          else loadQueue.push(resolve);
+        });
       }
     },
     created() {
@@ -111,8 +133,8 @@ export function InitializeAuthComponent(
 
           clearTimeout(timeoutHandler);
 
-          if (data.action == "user_info") {
-            this.user = data.body.user;
+          if (data.action === "user_info") {
+            this.user = data.body;
           } else {
             this.token = undefined;
             this.authed = false;
@@ -131,7 +153,8 @@ export function InitializeAuthComponent(
             this.user = data.body.user;
             this.authed = true;
           } else if (data.action == "authentication_failed") {
-            this.token = undefined;
+            // this.token = undefined;
+            if (this.token) this.logout();
           } else if (data.action == "keep_alive") {
             socket.send(
               JSON.stringify({
@@ -161,7 +184,7 @@ export function InitializeAuthComponent(
 
 interface InnerAuthInterface {
   token?: string;
-  user?: { username: string; uuid: string };
+  user?: Player;
   loaded: boolean;
   socket?: WebSocket;
   error?: string;
@@ -172,4 +195,5 @@ export interface AuthInterface extends InnerAuthInterface {
   sendWS(token: string): Promise<string>;
   authToken(data: string): Promise<boolean>;
   logout(): void;
+  waitLoad(): Promise<null>;
 }

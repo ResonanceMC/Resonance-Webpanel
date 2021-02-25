@@ -12,7 +12,7 @@
           v-model="inputToken"
           class="pt-3"
           autofocus
-          placeholder="Ex: DYlbyU_vmYU"
+          placeholder="Ex: ABCDEF"
           :loading="loading"
           :error="error"
           height="40px"
@@ -28,6 +28,12 @@ import debounce from "lodash/debounce";
 
 export default Vue.extend({
   name: "Login",
+  props: {
+    token: {
+      type: String,
+      required: false
+    }
+  },
   data: () => {
     return {
       inputToken: "",
@@ -37,13 +43,32 @@ export default Vue.extend({
   },
   watch: {
     inputToken(token) {
-      if (token) this.debounceAuthToken();
+      if (token && this.$auth.loaded) this.debounceAuthToken();
+    }
+  },
+  async mounted() {
+    if (this.token) {
+      this.$router.push({ name: "login" }).then();
+      this.inputToken = this.token;
+      this.validateInput();
+      await this.$auth.waitLoad();
+      await this.authToken();
     }
   },
   methods: {
-    debounceAuthToken() {
-      this.inputToken = this.inputToken.replace(/ /g, "");
-      if (!this._debounce) this._debounce = debounce(this.authToken, 400);
+    validateInput() {
+      this.inputToken = this.inputToken.replace(/ /g, "").toUpperCase();
+      if (
+        this.inputToken === "RAZWASHERE" ||
+        this.inputToken === "THICCWASHERE"
+      ) {
+        this.$auth.error = "Gottem";
+        document.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+      }
+    },
+    debounceAuthToken(waitTime = 400) {
+      this.validateInput();
+      if (!this._debounce) this._debounce = debounce(this.authToken, waitTime);
       this._debounce();
     },
     async authToken() {
