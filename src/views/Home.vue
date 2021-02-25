@@ -2,11 +2,12 @@
   <v-fade-transition hide-on-leave>
     <v-container fill-height fluid>
       <v-row justify="center" align="center">
+        <!-- lazy-src="~@/assets/lazy-logo.png"  // generate: ffmpeg -i logo.png -filter_complex "boxblur=100,scale=120:-1" lazy-logo.png-->
         <v-img
           alt="Resonance logo"
-          src="../assets/Artboard 12-@4x.png?lazy"
-          style="height:50vh"
+          src="~@/assets/logo.png"
           transition="scale-transition"
+          style="height:50vh"
           class="shrink mt-n16"
           contain
         />

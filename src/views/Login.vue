@@ -60,7 +60,8 @@ export default Vue.extend({
       this.inputToken = this.inputToken.replace(/ /g, "").toUpperCase();
       if (
         this.inputToken === "RAZWASHERE" ||
-        this.inputToken === "THICCWASHERE"
+        this.inputToken === "THICCWASHERE" ||
+        this.inputToken === "FEDCBA"
       ) {
         this.$auth.error = "Gottem";
         document.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
