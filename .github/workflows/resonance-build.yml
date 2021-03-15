@@ -1,0 +1,30 @@
+name: Build Vue to Artifacts
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - run: |
+          npm install
+          npm run build
+          
+      - name: Upload build
+        uses: actions/upload-artifact@v2
+        with:
+          name: resonance-client-build
+          path: dist/*
+      
