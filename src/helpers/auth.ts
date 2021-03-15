@@ -1,3 +1,5 @@
+import { plainToClass } from "class-transformer";
+
 const PORT = "";
 const HOST = "thiccaxe.net/ws";
 
@@ -133,7 +135,9 @@ export function InitializeAuthComponent(
           clearTimeout(timeoutHandler);
 
           if (data.action === "user_info") {
-            this.user = data.body;
+            this.user = plainToClass(Player, data.body.user);
+
+            console.log(this.user);
           } else {
             this.token = undefined;
             this.authed = false;

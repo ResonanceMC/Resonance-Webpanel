@@ -14,8 +14,8 @@
               class="speaker"
               :id="`speaker-${player.data.uuid}`"
               :style="
-                `top: calc(50% - ${pos.z * 5}px);
-            left: calc(50% + ${pos.x * 5}px);`
+                `top: calc(50% - ${pos.z * 10}px);
+            left: calc(50% + ${pos.x * 10}px);`
               "
             />
           </template>
@@ -119,7 +119,7 @@ export default Vue.extend({
       const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
 
       panner.panningModel = "HRTF";
-      panner.distanceModel = "linear";
+      panner.distanceModel = "inverse";
       panner.refDistance = 20;
       panner.maxDistance = 130;
       panner.rolloffFactor = 1;
@@ -135,6 +135,10 @@ export default Vue.extend({
       panner.connect(audioCtx.destination);
 
       this.test();
+
+      this.$auth.waitLoad().then(() => {
+        this.pos.parent = this.$auth.user.pos;
+      });
     },
     test() {
       const keys: { [key in string]?: boolean } = {
@@ -159,8 +163,8 @@ export default Vue.extend({
         if (keys.d) pos.x++;
         if (keys.a) pos.x--;
 
-        this.pos.x += pos.x;
-        this.pos.z += pos.z;
+        this.pos.vector.x += pos.x;
+        this.pos.vector.z += pos.z;
         if (!this.panner) return;
         this.positionPanner(this.panner, this.pos.x, this.pos.y, this.pos.z);
 
