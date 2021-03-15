@@ -25,6 +25,6 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v2
         with:
-          name: resonance-client-build.zip
+          name: resonance-client-build
           path: dist/*
       
