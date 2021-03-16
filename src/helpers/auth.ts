@@ -119,6 +119,9 @@ export function InitializeAuthComponent(
       }
     },
     created() {
+      /* eslint-disable-next-line */
+      (window as any).auth = this;
+
       const socket = (this.socket = new WebSocket(
         `wss://${HOST}${PORT ? ":" + PORT : ""}`
       ));
@@ -151,8 +154,6 @@ export function InitializeAuthComponent(
 
           if (data.action === "user_info") {
             this.user = plainToClass(Player, data.body.user);
-
-            console.log(this.user);
           } else {
             this.token = undefined;
             this.authed = false;

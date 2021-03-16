@@ -92,7 +92,7 @@ export default Vue.extend({
       // this.$set(this.players[1], "stream", audioDestinationNode2.stream);
       // });
 
-      setInterval(async () => {
+      /* setInterval(async () => {
         const { body } = await this.$auth.sendWS(
           {
             action: "user_info"
@@ -112,7 +112,7 @@ export default Vue.extend({
             pos.rotation
           );
         }
-      }, 1000 / 20);
+      }, 1000 / 20); */
     }
   },
   mounted() {
@@ -131,7 +131,8 @@ export default Vue.extend({
       );
     }, 500);
 
-    console.log(this);
+    /* eslint-disable-next-line */
+    (window as any).audioView = this;
 
     // const mediaStream: MediaStream = (this.mediaStream = await navigator.mediaDevices.getUserMedia(
     //   {
