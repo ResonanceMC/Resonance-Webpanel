@@ -6,7 +6,7 @@ const HOST = "thiccaxe.net/ws";
 import router from "@/router";
 import store from "@/store/index";
 import _Vue from "vue";
-import { Player, WSMessage } from "@/helpers/interfaces";
+import { Player, UserUpdateAction, WSMessage } from "@/helpers/interfaces";
 
 let authInfo: _Vue;
 
@@ -28,7 +28,7 @@ export function InitializeAuthComponent(
       return {
         loaded: false,
         authed: false,
-        user: {}
+        user: {} as Player
       } as InnerAuthInterface;
     },
     computed: {
@@ -101,6 +101,21 @@ export function InitializeAuthComponent(
           if (this.loaded) resolve();
           else loadQueue.push(resolve);
         });
+      },
+
+      // eslint-disable-next-line
+      handleUserUpdate(input: Record<string, any>): void {
+        const data: UserUpdateAction = plainToClass(UserUpdateAction, input);
+
+        switch (data.type) {
+          case "position": {
+            if (data.pos && this.user?.pos) {
+              this.user.pos.registerPosition(data.pos);
+            }
+          }
+        }
+
+        console.log(data);
       }
     },
     created() {
@@ -151,20 +166,32 @@ export function InitializeAuthComponent(
         try {
           const data = JSON.parse(event.data);
           console.log(data);
-          if (data.action == "authenticated") {
-            this.token = data.body.token;
-            this.user = data.body.user;
-            this.authed = true;
-          } else if (data.action == "authentication_failed") {
-            // this.token = undefined;
-            if (this.token) this.logout();
-          } else if (data.action == "keep_alive") {
-            socket.send(
-              JSON.stringify({
-                action: "keep_alive",
-                body: { token: this.token }
-              })
-            );
+
+          switch (data.action) {
+            case "authenticated": {
+              this.token = data.body.token;
+              this.user = data.body.user;
+              this.authed = true;
+              break;
+            }
+            case "authentication_failed": {
+              // this.token = undefined;
+              if (this.token) this.logout();
+              break;
+            }
+            case "keep_alive": {
+              socket.send(
+                JSON.stringify({
+                  action: "keep_alive",
+                  body: { token: this.token }
+                })
+              );
+              break;
+            }
+            case "user_update": {
+              this.handleUserUpdate(data);
+              break;
+            }
           }
 
           if (data.id != undefined && socketQueue["i_" + data.id]) {

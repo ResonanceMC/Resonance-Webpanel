@@ -52,20 +52,15 @@ export class PlayerPosition implements Vector3 {
           : 0;
       }
     });
-    this.registerPosition(x, y, z);
+    this.registerPosition({ x, y, z });
   }
 
-  registerPosition(
-    x: number,
-    y: number,
-    z: number,
-    facing?: [number, number]
-  ): void {
-    this.vector.x = x;
-    this.vector.y = y;
-    this.vector.z = z;
+  registerPosition({ x, y, z, rotation }: PlayerUpdatePositionInterface): void {
+    if (x != undefined) this.vector.x = x;
+    if (y != undefined) this.vector.y = y;
+    if (z != undefined) this.vector.z = z;
 
-    if (facing != undefined) this.rotation = facing;
+    if (rotation != undefined) this.rotation = rotation;
   }
 
   /**
@@ -85,8 +80,8 @@ export class PlayerPosition implements Vector3 {
     // convert to spherical coords and run subtraction operations
 
     const sphericalVector = cartesianToSpherical(diffVector);
-    sphericalVector.lat += this.rotation[0];
-    sphericalVector.lon += this.rotation[1];
+    sphericalVector.lat += this.rotation[1];
+    sphericalVector.lon += this.rotation[0];
 
     // convert back to cartesian coordinates, and update speaker player
     const normalizedVector = sphericalToCartesian(sphericalVector);
@@ -111,4 +106,20 @@ export interface WSMessage {
   id: number;
   action: string;
   body: Record<string, never>;
+}
+
+export interface PlayerUpdatePositionInterface {
+  x?: number;
+  y?: number;
+  z?: number;
+  rotation?: [number, number];
+}
+
+export class UserUpdateAction {
+  @Expose() type!: string;
+
+  // Per type interfaces
+  pos?: PlayerUpdatePositionInterface;
+  dimension?: string;
+  online?: boolean;
 }
