@@ -48,7 +48,9 @@ export function sphericalToCartesian({
 export function cartesianToSpherical(coord: Vector3): SphericalVector {
   if (!coord) throw Error("Coordinate not valid.");
   const lon = Math.atan2(coord.x, -coord.z) * RAD2DEG;
-  const radius = Math.sqrt(coord.x * coord.x + coord.z * coord.z);
+  const radius = Math.sqrt(
+    coord.x * coord.x + coord.y * coord.y + coord.z * coord.z
+  );
   const lat = Math.atan2(coord.y, radius) * RAD2DEG;
 
   return { lon, lat, radius } as SphericalVector;

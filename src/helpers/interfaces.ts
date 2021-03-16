@@ -128,7 +128,6 @@ export class PlayerPosition implements Vector3 {
     player.x = normalizedVector.x;
     player.y = normalizedVector.y;
     player.z = normalizedVector.z;
-
     return player;
   }
 }

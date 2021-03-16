@@ -121,11 +121,11 @@ export default Vue.extend({
         this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
       }
 
-      // console.log(
-      //   Math.sqrt(distance),
-      //   this.panner.maxDistance,
-      //   this.gainNode.gain.value
-      // );
+      console.log(
+        Math.sqrt(distance),
+        this.panner.maxDistance,
+        this.gainNode.gain.value
+      );
     },
     init() {
       const audioCtx: AudioContext = this.audioCtx;
