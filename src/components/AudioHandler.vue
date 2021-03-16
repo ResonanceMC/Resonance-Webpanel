@@ -39,7 +39,7 @@
 import Vue, { PropType } from "vue";
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
-import { AudioContext, PannerNode } from "standardized-audio-context";
+import { AudioContext, PannerNode, GainNode } from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -71,9 +71,10 @@ export default Vue.extend({
       // mediaStream: null as MediaStream | null,
       // audioCtx: null as AudioContext | null,
       panner: null as PannerNode<AudioContext> | null,
+      gainNode: null as GainNode<AudioContext> | null,
+      loading: true
       // posX: 0,
       // posZ: 0,
-      loading: true
     };
   },
   watch: {
@@ -101,6 +102,30 @@ export default Vue.extend({
       } catch {
         // panner.setPosition(x, y, z);
       }
+
+      // compute distance squared for gain falloff
+      const distance = x ** 2 + y ** 2 + z ** 2;
+
+      const falloffGain =
+        ((panner.maxDistance / 2) ** 2 - distance) / panner.maxDistance ** 2 +
+        1;
+
+      if (distance >= (panner.maxDistance / 2) ** 2 && falloffGain >= 0) {
+        this.gainNode.gain.setValueAtTime(
+          falloffGain,
+          this.audioCtx.currentTime
+        );
+      } else if (distance < (panner.maxDistance / 2) ** 2) {
+        this.gainNode.gain.setValueAtTime(1, this.audioCtx.currentTime);
+      } else {
+        this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+      }
+
+      // console.log(
+      //   Math.sqrt(distance),
+      //   this.panner.maxDistance,
+      //   this.gainNode.gain.value
+      // );
     },
     init() {
       const audioCtx: AudioContext = this.audioCtx;
@@ -117,11 +142,12 @@ export default Vue.extend({
       this.loading = false;
 
       const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
+      const gainNode: GainNode<AudioContext> = (this.gainNode = audioCtx.createGain());
 
       panner.panningModel = "HRTF";
       panner.distanceModel = "inverse";
-      panner.refDistance = 20;
-      panner.maxDistance = 130;
+      panner.refDistance = 10;
+      panner.maxDistance = 40;
       panner.rolloffFactor = 1;
       panner.coneInnerAngle = 360;
       panner.coneOuterAngle = 0;
@@ -132,7 +158,8 @@ export default Vue.extend({
       // audioCtx.listener.forwardZ.value = 1;
 
       source.connect(panner);
-      panner.connect(audioCtx.destination);
+      panner.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
 
       this.test();
 
@@ -206,6 +233,11 @@ export default Vue.extend({
   destroyed() {
     // this.audioCtx?.close();
     this.panner?.disconnect();
+    this.pos.unMount();
+
+    delete this.pos;
+    delete this.audioCtx;
+    delete this.panner;
     console.log("Closed audio.");
   }
 });

@@ -97,9 +97,10 @@ export class PlayerPosition implements Vector3 {
   }
 
   unMount(): void {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    delete this;
+    if (this.parent?.children)
+      this.parent.children = this.parent.children.filter(
+        child => child != this
+      );
   }
 
   /**
