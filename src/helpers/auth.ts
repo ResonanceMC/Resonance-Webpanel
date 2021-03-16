@@ -106,6 +106,7 @@ export function InitializeAuthComponent(
       // eslint-disable-next-line
       handleUserUpdate(input: Record<string, any>): void {
         const data: UserUpdateAction = plainToClass(UserUpdateAction, input);
+        data.type = "position";
 
         switch (data.type) {
           case "position": {
@@ -115,7 +116,7 @@ export function InitializeAuthComponent(
           }
         }
 
-        console.log(data);
+        // console.log(data);
       }
     },
     created() {
@@ -166,16 +167,16 @@ export function InitializeAuthComponent(
       socket.onmessage = (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
-          console.log(data);
+          // console.log(data);
 
           switch (data.action) {
             case "authenticated": {
               this.token = data.body.token;
-              this.user = data.body.user;
+              this.user = plainToClass(Player, data.body.user);
               this.authed = true;
               break;
             }
-            case "authentication_failed": {
+            case "auth_failed": {
               // this.token = undefined;
               if (this.token) this.logout();
               break;
@@ -190,7 +191,7 @@ export function InitializeAuthComponent(
               break;
             }
             case "user_update": {
-              this.handleUserUpdate(data);
+              this.handleUserUpdate(data.body.user);
               break;
             }
           }

@@ -137,7 +137,7 @@ export default Vue.extend({
       this.test();
 
       this.$auth.waitLoad().then(() => {
-        this.pos.parent = this.$auth.user.pos;
+        this.pos.setParent(this.$auth.user.pos);
       });
     },
     test() {
@@ -163,8 +163,8 @@ export default Vue.extend({
         if (keys.d) pos.x++;
         if (keys.a) pos.x--;
 
-        this.pos.vector.x += pos.x;
-        this.pos.vector.z += pos.z;
+        if (pos.x != 0) this.pos.vector.x += pos.x;
+        if (pos.z != 0) this.pos.vector.z += pos.z;
         if (!this.panner) return;
         this.positionPanner(this.panner, this.pos.x, this.pos.y, this.pos.z);
 

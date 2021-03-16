@@ -5,6 +5,16 @@ import {
 } from "@/helpers/vectors";
 import { Expose, Transform } from "class-transformer";
 
+// eslint-disable-next-line
+interface _PlayerPosition {
+  x?: number;
+  y?: number;
+  z?: number;
+  inRange?: boolean;
+  rotation?: [number, number];
+  parent?: PlayerPosition;
+}
+
 export class PlayerPosition implements Vector3 {
   x: number; // normalized coords
   y: number;
@@ -12,25 +22,29 @@ export class PlayerPosition implements Vector3 {
   inRange: boolean;
   rotation?: [number, number]; // yaw, pitch (previously "facing", remind thicc to change)
   parent?: PlayerPosition;
+  children?: PlayerPosition[];
   _x!: number; // de-normalized coords relative to rotation
   _y!: number;
   _z!: number;
   vector: Vector3; // sets _x, _y, _z
 
-  constructor({
-    x = 0,
-    y = 0,
-    z = 0,
-    inRange = true,
-    rotation = undefined,
-    parent = undefined
-  } = {}) {
+  constructor(
+    {
+      x = 0,
+      y = 0,
+      z = 0,
+      inRange = true,
+      rotation = undefined,
+      parent = undefined
+    } = {} as _PlayerPosition
+  ) {
     this.x = x;
     this.y = y;
     this.z = z;
     this.inRange = inRange;
     this.rotation = rotation;
-    this.parent = parent;
+
+    if (parent instanceof PlayerPosition) this.setParent(parent);
 
     const self = this;
     this.vector = new Proxy({} as Vector3, {
@@ -55,12 +69,37 @@ export class PlayerPosition implements Vector3 {
     this.registerPosition({ x, y, z });
   }
 
+  setParent(parent: PlayerPosition): void {
+    if (this.parent == parent) return;
+    if (parent.children?.find(c => c == this)) return;
+
+    this.parent = parent;
+    if (!parent.children) parent.children = [];
+    parent.children.push(this);
+  }
+
   registerPosition({ x, y, z, rotation }: PlayerUpdatePositionInterface): void {
-    if (x != undefined) this.vector.x = x;
-    if (y != undefined) this.vector.y = y;
-    if (z != undefined) this.vector.z = z;
+    if (x != undefined) this._x = x;
+    if (y != undefined) this._y = y;
+    if (z != undefined) this._z = z;
 
     if (rotation != undefined) this.rotation = rotation;
+
+    if (this.parent?.rotation) {
+      this.parent.normalizeCoords(this);
+    } else {
+      if (x != undefined) this.x = x;
+      if (y != undefined) this.y = y;
+      if (z != undefined) this.z = z;
+    }
+
+    this.children?.forEach(child => this.normalizeCoords(child));
+  }
+
+  unMount(): void {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    delete this;
   }
 
   /**
