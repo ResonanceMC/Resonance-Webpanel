@@ -1,7 +1,9 @@
 import { plainToClass } from "class-transformer";
 
 const PORT = "";
-const HOST = "thiccaxe.net/ws";
+// const HOST = "thiccaxe.net/ws";
+const HOST = "resonance.razboy.dev";
+// const HOST = "148.251.144.4:25560";
 
 import router from "@/router";
 import store from "@/store/index";
@@ -111,6 +113,10 @@ export function InitializeAuthComponent(
         switch (data.type) {
           case "position": {
             if (data.pos && this.user?.pos) {
+              // temporarily will add .5 to each positional axis to center to block
+              if (data.pos.x) data.pos.x -= 0.5;
+              if (data.pos.y) data.pos.y -= 0.5;
+              if (data.pos.z) data.pos.z -= 0.5;
               this.user.pos.registerPosition(data.pos);
             }
           }
@@ -191,7 +197,7 @@ export function InitializeAuthComponent(
               break;
             }
             case "user_update": {
-              this.handleUserUpdate(data.body.user);
+              this.handleUserUpdate(data.body);
               break;
             }
           }

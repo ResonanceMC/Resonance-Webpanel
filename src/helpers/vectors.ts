@@ -51,7 +51,9 @@ export function cartesianToSpherical(coord: Vector3): SphericalVector {
   const radius = Math.sqrt(
     coord.x * coord.x + coord.y * coord.y + coord.z * coord.z
   );
-  const lat = Math.atan2(coord.y, radius) * RAD2DEG;
+  const lat =
+    Math.atan2(coord.y, Math.sqrt(coord.x * coord.x + coord.z * coord.z)) *
+    RAD2DEG;
 
   return { lon, lat, radius } as SphericalVector;
 }

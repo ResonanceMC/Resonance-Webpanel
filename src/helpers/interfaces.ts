@@ -112,7 +112,7 @@ export class PlayerPosition implements Vector3 {
     if (!this.rotation) throw Error("Listener does not have an orientation!");
 
     // subtract vectors from each other
-    const diffVector = { x: player._x, y: player._y, z: player._z } as Vector3;
+    const diffVector = { x: -player._x, y: player._y, z: player._z } as Vector3;
     diffVector.x += this.x;
     diffVector.y -= this.y;
     diffVector.z -= this.z;
@@ -122,6 +122,8 @@ export class PlayerPosition implements Vector3 {
     const sphericalVector = cartesianToSpherical(diffVector);
     sphericalVector.lat += this.rotation[1];
     sphericalVector.lon += this.rotation[0];
+
+    console.log(sphericalVector);
 
     // convert back to cartesian coordinates, and update speaker player
     const normalizedVector = sphericalToCartesian(sphericalVector);

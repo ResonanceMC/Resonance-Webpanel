@@ -52,7 +52,7 @@ export default Vue.extend({
             username: "TestPlayer",
             uuid: "3234-lkj3-dfsdlkj43"
           },
-          pos: new PlayerPosition({ y: 69, z: 50 })
+          pos: new PlayerPosition({ x: -49, y: 80, z: 110 })
         }
         // {
         //   data: {
