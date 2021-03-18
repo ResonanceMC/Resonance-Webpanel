@@ -132,6 +132,11 @@ export class PlayerPosition implements Vector3 {
     player.x = normalizedVector.x;
     player.y = normalizedVector.y;
     player.z = normalizedVector.z;
+
+    // We push updates to all watchers signifying that the position has changed.
+    // eslint-disable-next-line
+    // @ts-ignore
+    if (player?.__ob__?.dep) player.__ob__.dep.notify();
     return player;
   }
 }
