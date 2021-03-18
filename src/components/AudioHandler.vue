@@ -14,8 +14,11 @@
               class="speaker"
               :id="`speaker-${player.data.uuid}`"
               :style="
-                `top: calc(50% - ${pos.z * 5}px);
-            left: calc(50% + ${pos.x * 5}px);`
+                `top: calc(50% - ${pos.z * 10}px);
+            left: calc(50% + ${pos.x * 10}px);
+            background-image: url(https://minotar.net/helm/${
+              player.data.uuid
+            }/50.png);`
               "
             />
           </template>
@@ -39,7 +42,7 @@
 import Vue, { PropType } from "vue";
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
-import { AudioContext, PannerNode } from "standardized-audio-context";
+import { AudioContext, PannerNode, GainNode } from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -71,9 +74,10 @@ export default Vue.extend({
       // mediaStream: null as MediaStream | null,
       // audioCtx: null as AudioContext | null,
       panner: null as PannerNode<AudioContext> | null,
+      gainNode: null as GainNode<AudioContext> | null,
+      loading: true
       // posX: 0,
       // posZ: 0,
-      loading: true
     };
   },
   watch: {
@@ -101,6 +105,30 @@ export default Vue.extend({
       } catch {
         // panner.setPosition(x, y, z);
       }
+
+      // compute distance squared for gain falloff
+      const distance = x ** 2 + y ** 2 + z ** 2;
+
+      const falloffGain =
+        ((panner.maxDistance / 2) ** 2 - distance) / panner.maxDistance ** 2 +
+        1;
+
+      if (distance >= (panner.maxDistance / 2) ** 2 && falloffGain >= 0) {
+        this.gainNode.gain.setValueAtTime(
+          falloffGain,
+          this.audioCtx.currentTime
+        );
+      } else if (distance < (panner.maxDistance / 2) ** 2) {
+        this.gainNode.gain.setValueAtTime(1, this.audioCtx.currentTime);
+      } else {
+        this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+      }
+
+      // console.log(
+      //   Math.sqrt(distance),
+      //   this.panner.maxDistance,
+      //   this.gainNode.gain.value
+      // );
     },
     init() {
       const audioCtx: AudioContext = this.audioCtx;
@@ -117,11 +145,12 @@ export default Vue.extend({
       this.loading = false;
 
       const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
+      const gainNode: GainNode<AudioContext> = (this.gainNode = audioCtx.createGain());
 
       panner.panningModel = "HRTF";
-      panner.distanceModel = "linear";
-      panner.refDistance = 20;
-      panner.maxDistance = 130;
+      panner.distanceModel = "inverse";
+      panner.refDistance = 10;
+      panner.maxDistance = 40;
       panner.rolloffFactor = 1;
       panner.coneInnerAngle = 360;
       panner.coneOuterAngle = 0;
@@ -132,9 +161,14 @@ export default Vue.extend({
       // audioCtx.listener.forwardZ.value = 1;
 
       source.connect(panner);
-      panner.connect(audioCtx.destination);
+      panner.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
 
-      this.test();
+      // this.test();
+
+      this.$auth.waitLoad().then(() => {
+        this.pos.setParent(this.$auth.user.pos);
+      });
     },
     test() {
       const keys: { [key in string]?: boolean } = {
@@ -159,8 +193,8 @@ export default Vue.extend({
         if (keys.d) pos.x++;
         if (keys.a) pos.x--;
 
-        this.pos.x += pos.x;
-        this.pos.z += pos.z;
+        if (pos.x != 0) this.pos.vector.x += pos.x;
+        if (pos.z != 0) this.pos.vector.z += pos.z;
         if (!this.panner) return;
         this.positionPanner(this.panner, this.pos.x, this.pos.y, this.pos.z);
 
@@ -202,6 +236,11 @@ export default Vue.extend({
   destroyed() {
     // this.audioCtx?.close();
     this.panner?.disconnect();
+    this.pos.unMount();
+
+    delete this.pos;
+    delete this.audioCtx;
+    delete this.panner;
     console.log("Closed audio.");
   }
 });

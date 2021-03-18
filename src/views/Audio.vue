@@ -33,7 +33,6 @@
 <script lang="ts">
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
-import { Player, PlayerPosition } from "@/helpers/interfaces";
 import { AudioContext } from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -46,22 +45,7 @@ export default Vue.extend({
     return {
       manualAudio: false,
       audioCtx: new AudioContext(),
-      players: [
-        {
-          data: {
-            username: "TestPlayer",
-            uuid: "3234-lkj3-dfsdlkj43"
-          },
-          pos: new PlayerPosition()
-        },
-        {
-          data: {
-            username: "TestPlayer2",
-            uuid: "3234-lkj3-dfsdlkj44"
-          },
-          pos: new PlayerPosition({ x: 250 })
-        }
-      ] as Player[]
+      players: this.$store.state.peers
     };
   },
   components: { AudioHandler },
@@ -89,8 +73,30 @@ export default Vue.extend({
 
       // audioNode.addEventListener("play", () => {
       this.$set(this.players[0], "stream", audioDestinationNode.stream);
-      this.$set(this.players[1], "stream", audioDestinationNode2.stream);
+      // this.$set(this.players[1], "stream", audioDestinationNode2.stream);
       // });
+
+      /* setInterval(async () => {
+        const { body } = await this.$auth.sendWS(
+          {
+            action: "user_info"
+          },
+          true
+        );
+
+        let pos = body?.user?.pos;
+
+        if (pos) {
+          pos = { x: 0, y: 0, z: 0, ...pos };
+
+          this.$auth.user.pos.registerPosition(
+            pos.x,
+            pos.y,
+            pos.z,
+            pos.rotation
+          );
+        }
+      }, 1000 / 20); */
     }
   },
   mounted() {
@@ -109,7 +115,8 @@ export default Vue.extend({
       );
     }, 500);
 
-    console.log(this);
+    /* eslint-disable-next-line */
+    (window as any).audioView = this;
 
     // const mediaStream: MediaStream = (this.mediaStream = await navigator.mediaDevices.getUserMedia(
     //   {
@@ -117,6 +124,15 @@ export default Vue.extend({
     //     audio: true
     //   }
     // ));
+  },
+  async created() {
+    await this.$auth.waitLoad();
+    await this.$auth.sendWS({ action: "user_connect" }, true, false);
+  },
+
+  async destroyed() {
+    await this.$auth.waitLoad();
+    await this.$auth.sendWS({ action: "user_disconnect" }, true, false);
   }
 });
 </script>

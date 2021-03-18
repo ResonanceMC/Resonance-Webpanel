@@ -27,7 +27,8 @@ export function sphericalToCartesian({
   lat,
   radius
 }: SphericalVector): Vector3 {
-  if (!lon || !lat || !radius) throw Error("Coordinate not valid.");
+  if (!(lon != undefined && lat != undefined && radius != undefined))
+    throw Error("Coordinate not valid.");
 
   const phi = (90 - lat) * DEG2RAD;
   const theta = (lon + 180) * DEG2RAD;
@@ -47,8 +48,12 @@ export function sphericalToCartesian({
 export function cartesianToSpherical(coord: Vector3): SphericalVector {
   if (!coord) throw Error("Coordinate not valid.");
   const lon = Math.atan2(coord.x, -coord.z) * RAD2DEG;
-  const radius = Math.sqrt(coord.x * coord.x + coord.z * coord.z);
-  const lat = Math.atan2(coord.y, radius) * RAD2DEG;
+  const radius = Math.sqrt(
+    coord.x * coord.x + coord.y * coord.y + coord.z * coord.z
+  );
+  const lat =
+    Math.atan2(coord.y, Math.sqrt(coord.x * coord.x + coord.z * coord.z)) *
+    RAD2DEG;
 
   return { lon, lat, radius } as SphericalVector;
 }
