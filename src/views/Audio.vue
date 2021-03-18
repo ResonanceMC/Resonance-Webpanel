@@ -33,7 +33,6 @@
 <script lang="ts">
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
-import { Player, PlayerPosition } from "@/helpers/interfaces";
 import { AudioContext } from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -46,22 +45,7 @@ export default Vue.extend({
     return {
       manualAudio: false,
       audioCtx: new AudioContext(),
-      players: [
-        {
-          data: {
-            username: "TestPlayer",
-            uuid: "3234-lkj3-dfsdlkj43"
-          },
-          pos: new PlayerPosition({ x: -49, y: 80, z: 110 })
-        }
-        // {
-        //   data: {
-        //     username: "TestPlayer2",
-        //     uuid: "3234-lkj3-dfsdlkj44"
-        //   },
-        //   pos: new PlayerPosition({ x: 250 })
-        // }
-      ] as Player[]
+      players: this.$store.state.peers
     };
   },
   components: { AudioHandler },
@@ -140,6 +124,15 @@ export default Vue.extend({
     //     audio: true
     //   }
     // ));
+  },
+  async created() {
+    await this.$auth.waitLoad();
+    await this.$auth.sendWS({ action: "user_connect" }, true, false);
+  },
+
+  async destroyed() {
+    await this.$auth.waitLoad();
+    await this.$auth.sendWS({ action: "user_disconnect" }, true, false);
   }
 });
 </script>

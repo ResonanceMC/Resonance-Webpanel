@@ -161,7 +161,7 @@ export default Vue.extend({
       panner.connect(gainNode);
       gainNode.connect(audioCtx.destination);
 
-      this.test();
+      // this.test();
 
       this.$auth.waitLoad().then(() => {
         this.pos.setParent(this.$auth.user.pos);

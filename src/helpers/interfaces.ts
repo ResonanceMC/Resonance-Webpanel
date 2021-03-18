@@ -76,6 +76,8 @@ export class PlayerPosition implements Vector3 {
     this.parent = parent;
     if (!parent.children) parent.children = [];
     parent.children.push(this);
+
+    parent.normalizeCoords(this);
   }
 
   registerPosition({ x, y, z, rotation }: PlayerUpdatePositionInterface): void {
@@ -123,7 +125,7 @@ export class PlayerPosition implements Vector3 {
     sphericalVector.lat += this.rotation[1];
     sphericalVector.lon += this.rotation[0];
 
-    console.log(sphericalVector);
+    if (process.env.NODE_ENV === "development") console.log(sphericalVector);
 
     // convert back to cartesian coordinates, and update speaker player
     const normalizedVector = sphericalToCartesian(sphericalVector);
@@ -163,4 +165,8 @@ export class UserUpdateAction {
   pos?: PlayerUpdatePositionInterface;
   dimension?: string;
   online?: boolean;
+}
+
+export class PeerUpdateAction extends UserUpdateAction {
+  @Expose() data!: { username: string; uuid: string };
 }

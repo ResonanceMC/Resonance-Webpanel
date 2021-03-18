@@ -6,14 +6,6 @@ module.exports = {
     disableHostCheck: true,
     compress: true
   },
-  chainWebpack: config => {
-    config.plugin("VuetifyLoaderPlugin").tap(() => [
-      {
-        progressiveImages: true,
-        sharp: true
-      }
-    ]);
-  },
   configureWebpack: {
     optimization: {
       splitChunks: {
@@ -21,5 +13,19 @@ module.exports = {
         maxSize: 250000
       }
     }
+  },
+  chainWebpack: config => {
+    config.plugin("VuetifyLoaderPlugin").tap(() => [
+      {
+        progressiveImages: true,
+        sharp: true
+      }
+    ]);
+
+    config.plugin("fork-ts-checker").tap(args => {
+      args[0].memoryLimit = 4096;
+      args[0].workers = 4;
+      return args;
+    });
   }
 };

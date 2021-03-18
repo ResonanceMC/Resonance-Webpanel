@@ -8,7 +8,12 @@ const HOST = "resonance.razboy.dev";
 import router from "@/router";
 import store from "@/store/index";
 import _Vue from "vue";
-import { Player, UserUpdateAction, WSMessage } from "@/helpers/interfaces";
+import {
+  PeerUpdateAction,
+  Player,
+  UserUpdateAction,
+  WSMessage
+} from "@/helpers/interfaces";
 
 let authInfo: _Vue;
 
@@ -30,7 +35,8 @@ export function InitializeAuthComponent(
       return {
         loaded: false,
         authed: false,
-        user: {} as Player
+        user: {} as Player,
+        logType: process.env.NODE_ENV === "development" ? "DEBUG" : "ERROR"
       } as InnerAuthInterface;
     },
     computed: {
@@ -66,7 +72,7 @@ export function InitializeAuthComponent(
 
             socketQueueId++;
           } else {
-            console.trace(sendBearer, this.token, data);
+            // console.trace(sendBearer, this.token, data);
             this.socket.send(JSON.stringify(data));
             resolve();
           }
@@ -90,7 +96,7 @@ export function InitializeAuthComponent(
       },
 
       logout() {
-        this.sendWS({ action: "logout" }, true, false);
+        this.sendWS({ action: "user_logout" }, true, false);
         console.log("User has been logged out.");
         this.token = undefined;
         this.user = undefined;
@@ -107,8 +113,7 @@ export function InitializeAuthComponent(
 
       // eslint-disable-next-line
       handleUserUpdate(input: Record<string, any>): void {
-        const data: UserUpdateAction = plainToClass(UserUpdateAction, input);
-        data.type = "position";
+        const data = plainToClass(UserUpdateAction, input);
 
         switch (data.type) {
           case "position": {
@@ -121,8 +126,46 @@ export function InitializeAuthComponent(
             }
           }
         }
+      },
+      // eslint-disable-next-line
+      handlePeerUpdate(input: Object[]): void {
+        const data = plainToClass(PeerUpdateAction, input);
 
-        // console.log(data);
+        console.log(data);
+
+        data.forEach((peer: PeerUpdateAction) => {
+          switch (peer.type) {
+            case "position": {
+              if (peer.pos && this.user?.pos) {
+                // temporarily will add .5 to each positional axis to center to block
+                if (peer.pos.x) peer.pos.x -= 0.5;
+                if (peer.pos.y) peer.pos.y -= 0.5;
+                if (peer.pos.z) peer.pos.z -= 0.5;
+
+                const peerInstance = store.state.peers.find(
+                  p => p.data?.uuid == peer.data?.uuid
+                );
+                if (!peerInstance) return;
+
+                peerInstance.pos.registerPosition(peer.pos);
+              }
+            }
+          }
+        });
+      },
+      // eslint-disable-next-line
+      handlePeerConnection(input: Record<string, any>): void {
+        const peer: Player = plainToClass(Player, input);
+
+        peer.stream = new AudioContext().createMediaStreamDestination().stream;
+
+        store.commit("addPeer", peer);
+      },
+      // eslint-disable-next-line
+      handlePeerDisconnect(input: Record<string, any>): void {
+        const peer: Player = plainToClass(Player, input);
+
+        store.commit("removePeer", peer);
       }
     },
     created() {
@@ -173,7 +216,7 @@ export function InitializeAuthComponent(
       socket.onmessage = (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
-          // console.log(data);
+          if (this.logType == "DEBUG") console.log(data);
 
           switch (data.action) {
             case "authenticated": {
@@ -198,6 +241,18 @@ export function InitializeAuthComponent(
             }
             case "user_update": {
               this.handleUserUpdate(data.body);
+              break;
+            }
+            case "peer_update": {
+              this.handlePeerUpdate(data.body?.peers);
+              break;
+            }
+            case "peer_connect": {
+              this.handlePeerConnection(data.body);
+              break;
+            }
+            case "peer_disconnect": {
+              this.handlePeerDisconnect(data.body);
               break;
             }
           }
@@ -230,7 +285,12 @@ interface InnerAuthInterface {
 }
 
 export interface AuthInterface extends InnerAuthInterface {
-  sendWS(token: string): Promise<string>;
+  sendWS(
+    /* eslint-disable-next-line */
+    data: Record<string, any>,
+    sendBearer?: boolean,
+    expectReturn?: boolean
+  ): Promise<string>;
   authToken(data: string): Promise<boolean>;
   logout(): void;
   waitLoad(): Promise<null>;
