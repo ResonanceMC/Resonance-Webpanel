@@ -142,7 +142,7 @@ export function InitializeAuthComponent(
         if (!this.user.online) return;
 
         data.forEach((peer: PeerUpdateAction) => {
-          const peerInstance: Player = store.state.peers.find(
+          const peerInstance: Player | undefined = store.state.peers.find(
             p => p.data?.uuid == peer.data?.uuid
           );
           console.log(peerInstance);
@@ -202,7 +202,8 @@ export function InitializeAuthComponent(
 
         peers.forEach(peer => {
           if (!peer.data?.uuid) return;
-          peer.stream = new AudioContext().createMediaStreamDestination().stream;
+          // peer.stream = new AudioContext().createMediaStreamDestination().stream;
+          peer.generateSessionDescription(true);
           store.commit("addPeer", peer);
         });
       }
@@ -256,7 +257,7 @@ export function InitializeAuthComponent(
         this.loaded = true;
       };
 
-      socket.onmessage = (event: MessageEvent) => {
+      socket.onmessage = async (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
           if (this.logType == LogType.DEBUG) console.log(data);
@@ -300,6 +301,36 @@ export function InitializeAuthComponent(
             }
             case "peer_info": {
               this.handlePeerInfo(data.body?.peers);
+              break;
+            }
+            case "peer_relaysessiondescription": {
+              if ("peerId" in data && data.peerId != this.user.data.uuid) {
+                const peer: Player | undefined = store.state.peers.find(
+                  p => p.data?.uuid == data.peerId
+                );
+                if (!peer?.connection || !data.body?.sessionDescription) return;
+
+                const description = new RTCSessionDescription(
+                  data.body.sessionDescription
+                );
+                await peer.connection.setRemoteDescription(description);
+                if (description.type == "offer")
+                  await peer.generateSessionDescription(false);
+              }
+              break;
+            }
+            case "peer_relayicecandidate": {
+              if ("peerId" in data && data.peerId != this.user.data.uuid) {
+                const peer: Player | undefined = store.state.peers.find(
+                  p => p.data?.uuid == data.peerId
+                );
+                if (!peer?.connection || !data.body?.iceCandidate) return;
+
+                await peer.connection.addIceCandidate(
+                  new RTCIceCandidate(data.body.iceCandidate)
+                );
+              }
+              break;
             }
           }
 

@@ -56,10 +56,16 @@ export default new Vuex.Store({
       // filter peer from peer list
       const index = state.peers.findIndex(p => p.data?.uuid == peer.data?.uuid);
 
-      if (index != -1) state.peers.splice(index, 1);
+      if (index != -1) {
+        state.peers[index]?.connection?.close();
+        state.peers.splice(index, 1);
+      }
     },
     setStream(state, stream?: MediaStream) {
       state.clientStream = stream;
+      stream?.getAudioTracks().forEach((track: MediaStreamTrack) => {
+        state.peers.forEach((p: Player) => p?.connection?.addTrack(track));
+      });
     }
   },
   // getters: {

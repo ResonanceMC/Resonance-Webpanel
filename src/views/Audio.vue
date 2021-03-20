@@ -160,13 +160,13 @@ export default Vue.extend({
     await this.$auth.waitLoad();
     await this.$auth.sendWS({ action: "peer_info" }, true, false);
     await this.$auth.sendWS({ action: "user_connect" }, true, false);
-    // await webRTCHandler.initiateUserMedia();
+    // await this.initiateUserMedia();
   },
 
   async destroyed() {
     await this.$auth.waitLoad();
     await this.$auth.sendWS({ action: "user_disconnect" }, true, false);
-    // await webRTCHandler.stopUserMedia();
+    await this.stopUserMedia();
   }
 });
 </script>

@@ -5,6 +5,7 @@ import {
 } from "@/helpers/vectors";
 import { Expose, Transform } from "class-transformer";
 import { authInfo as auth } from "@/helpers/auth";
+import store from "@/store/index";
 
 interface _PlayerPosition {
   x?: number;
@@ -158,6 +159,10 @@ export class Player {
     if (this?.__ob__?.dep) this.__ob__.dep.notify();
   }
 
+  constructor() {
+    this.instantiatePeerConnection();
+  }
+
   instantiatePeerConnection(): void {
     this.connection = new RTCPeerConnection({
       iceServers: [
@@ -178,7 +183,7 @@ export class Player {
         auth.sendWS(
           {
             action: "peer_relayicecandidate",
-            peer: this.data.uuid,
+            peerId: this.data.uuid,
             iceCandidate: {
               sdpMLineIndex: event.candidate.sdpMLineIndex,
               candidate: event.candidate.candidate
@@ -190,9 +195,43 @@ export class Player {
     };
 
     this.connection.ontrack = (event: RTCTrackEvent) => {
-      this.stream = event.streams[0];
+      if (event.streams?.length > 0) this.stream = event.streams[0];
     };
+
+    this.connection.onnegotiationneeded = () =>
+      this.generateSessionDescription(true);
+
+    store?.state?.clientStream
+      ?.getAudioTracks()
+      .forEach((track: MediaStreamTrack) => {
+        this.connection?.addTrack(track);
+      });
   }
+
+  // if localOffer is true, then it will generate an offer, otherwise will generate a answer description.
+  generateSessionDescription = async (localOffer = true) => {
+    const offer = localOffer
+      ? await this.connection?.createOffer()
+      : await this.connection?.createAnswer();
+
+    if (offer) {
+      await this.connection?.setLocalDescription(offer);
+
+      await auth.sendWS(
+        {
+          action: "peer_relaysessiondescription",
+          peerId: this.data.uuid,
+          body: {
+            sessionDescription: this?.connection?.localDescription
+          }
+        },
+        true,
+        false
+      );
+    } else {
+      console.error("Offer was not generated properly!");
+    }
+  };
 }
 
 export interface WSMessage {

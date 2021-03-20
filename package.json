@@ -79,7 +79,8 @@
           ]
         }
       ],
-      "@typescript-eslint/class-name-casing": "off"
+      "@typescript-eslint/class-name-casing": "off",
+      "@typescript-eslint/camelcase": "warn"
     }
   },
   "browserslist": [
