@@ -4,8 +4,8 @@ import {
   Vector3
 } from "@/helpers/vectors";
 import { Expose, Transform } from "class-transformer";
+import { authInfo as auth } from "@/helpers/auth";
 
-// eslint-disable-next-line
 interface _PlayerPosition {
   x?: number;
   y?: number;
@@ -20,7 +20,7 @@ export class PlayerPosition implements Vector3 {
   y: number;
   z: number;
   inRange: boolean;
-  rotation?: [number, number]; // yaw, pitch (previously "facing", remind thicc to change)
+  rotation?: [number, number]; // yaw, pitch
   parent?: PlayerPosition;
   children?: PlayerPosition[];
   _x!: number; // de-normalized coords relative to rotation
@@ -103,6 +103,7 @@ export class PlayerPosition implements Vector3 {
       this.parent.children = this.parent.children.filter(
         child => child != this
       );
+    if (this.parent) this.parent = undefined;
   }
 
   /**
@@ -125,7 +126,7 @@ export class PlayerPosition implements Vector3 {
     sphericalVector.lat += this.rotation[1];
     sphericalVector.lon += this.rotation[0];
 
-    if (process.env.NODE_ENV === "development") console.log(sphericalVector);
+    // if (process.env.NODE_ENV === "development") console.log(sphericalVector);
 
     // convert back to cartesian coordinates, and update speaker player
     const normalizedVector = sphericalToCartesian(sphericalVector);
@@ -146,8 +147,52 @@ export class Player {
   @Expose()
   pos!: PlayerPosition;
   stream?: MediaStream | MediaElementAudioSourceNode;
+  connection?: RTCPeerConnection;
   @Expose() data!: { username: string; uuid: string };
   @Expose() online!: boolean;
+  @Expose() dimension?: string;
+
+  callWatchers(): void {
+    // eslint-disable-next-line
+    // @ts-ignore
+    if (this?.__ob__?.dep) this.__ob__.dep.notify();
+  }
+
+  instantiatePeerConnection(): void {
+    this.connection = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:stun1.l.google.com:19302",
+            "stun:stun2.l.google.com:19302",
+            "stun:stun3.l.google.com:19302",
+            "stun:stun4.l.google.com:19302"
+          ]
+        }
+      ]
+    });
+
+    this.connection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+      if (event.candidate)
+        auth.sendWS(
+          {
+            action: "peer_relayicecandidate",
+            peer: this.data.uuid,
+            iceCandidate: {
+              sdpMLineIndex: event.candidate.sdpMLineIndex,
+              candidate: event.candidate.candidate
+            }
+          },
+          true,
+          false
+        );
+    };
+
+    this.connection.ontrack = (event: RTCTrackEvent) => {
+      this.stream = event.streams[0];
+    };
+  }
 }
 
 export interface WSMessage {
@@ -174,4 +219,9 @@ export class UserUpdateAction {
 
 export class PeerUpdateAction extends UserUpdateAction {
   @Expose() data!: { username: string; uuid: string };
+}
+
+export enum LogType {
+  "DEBUG" = "DEBUG",
+  "ERROR" = "ERROR"
 }

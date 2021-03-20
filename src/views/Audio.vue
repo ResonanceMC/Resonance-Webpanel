@@ -12,7 +12,7 @@
     >
     <div id="player" />
     <AudioHandler
-      v-for="player in players"
+      v-for="player in audioPlayers"
       :key="player.data.uuid"
       :pos="player.pos"
       :stream="player.stream"
@@ -34,6 +34,7 @@
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
 import { AudioContext } from "standardized-audio-context";
+import { Player } from "@/helpers/interfaces";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -47,6 +48,13 @@ export default Vue.extend({
       audioCtx: new AudioContext(),
       players: this.$store.state.peers
     };
+  },
+  computed: {
+    audioPlayers(): Player[] {
+      return this.players.filter(
+        (p: Player) => p.online && p.dimension == this.$auth.user.dimension
+      );
+    }
   },
   components: { AudioHandler },
   methods: {
@@ -97,6 +105,29 @@ export default Vue.extend({
           );
         }
       }, 1000 / 20); */
+    },
+
+    async initiateUserMedia(): Promise<void> {
+      try {
+        if (!this.$store.state.clientStream) {
+          const stream: MediaStream = await navigator.mediaDevices.getUserMedia(
+            { audio: true }
+          );
+          this.$store.commit("setStream", stream);
+        }
+      } catch (e) {
+        console.error("User declined request for microphone access!");
+      }
+    },
+    stopUserMedia(): void {
+      if (this.clientStream) {
+        this.$store.state.clientStream
+          .getTracks()
+          .forEach(function(track: MediaStreamTrack) {
+            track.stop();
+          });
+        this.$store.commit("setStream", undefined);
+      }
     }
   },
   mounted() {
@@ -127,12 +158,15 @@ export default Vue.extend({
   },
   async created() {
     await this.$auth.waitLoad();
+    await this.$auth.sendWS({ action: "peer_info" }, true, false);
     await this.$auth.sendWS({ action: "user_connect" }, true, false);
+    // await webRTCHandler.initiateUserMedia();
   },
 
   async destroyed() {
     await this.$auth.waitLoad();
     await this.$auth.sendWS({ action: "user_disconnect" }, true, false);
+    // await webRTCHandler.stopUserMedia();
   }
 });
 </script>

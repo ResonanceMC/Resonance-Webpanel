@@ -9,13 +9,14 @@ import router from "@/router";
 import store from "@/store/index";
 import _Vue from "vue";
 import {
+  LogType,
   PeerUpdateAction,
   Player,
   UserUpdateAction,
   WSMessage
 } from "@/helpers/interfaces";
 
-let authInfo: _Vue;
+export let authInfo: AuthInterface;
 
 let socketQueueId = 0;
 const socketQueue: {
@@ -35,8 +36,7 @@ export function InitializeAuthComponent(
       return {
         loaded: false,
         authed: false,
-        user: {} as Player,
-        logType: process.env.NODE_ENV === "development" ? "DEBUG" : "ERROR"
+        user: {} as Player
       } as InnerAuthInterface;
     },
     computed: {
@@ -46,6 +46,14 @@ export function InitializeAuthComponent(
         },
         set(val: string | undefined): void {
           store.commit("setToken", val);
+        }
+      },
+      logType: {
+        get(): LogType {
+          return store.state.logType;
+        },
+        set(val: LogType): void {
+          store.commit("setLogType", val);
         }
       }
     },
@@ -131,24 +139,42 @@ export function InitializeAuthComponent(
       handlePeerUpdate(input: Object[]): void {
         const data = plainToClass(PeerUpdateAction, input);
 
-        console.log(data);
+        if (!this.user.online) return;
 
         data.forEach((peer: PeerUpdateAction) => {
+          const peerInstance: Player = store.state.peers.find(
+            p => p.data?.uuid == peer.data?.uuid
+          );
+          console.log(peerInstance);
+          if (!peerInstance) return;
+
           switch (peer.type) {
             case "position": {
               if (peer.pos && this.user?.pos) {
                 // temporarily will add .5 to each positional axis to center to block
-                if (peer.pos.x) peer.pos.x -= 0.5;
-                if (peer.pos.y) peer.pos.y -= 0.5;
-                if (peer.pos.z) peer.pos.z -= 0.5;
-
-                const peerInstance = store.state.peers.find(
-                  p => p.data?.uuid == peer.data?.uuid
-                );
-                if (!peerInstance) return;
+                // if (peer.pos.x) peer.pos.x -= 0.5;
+                // if (peer.pos.y) peer.pos.y -= 0.5;
+                // if (peer.pos.z) peer.pos.z -= 0.5;
 
                 peerInstance.pos.registerPosition(peer.pos);
               }
+              break;
+            }
+            case "dimension": {
+              if (peer.dimension) {
+                peerInstance.dimension = peer.dimension;
+                peerInstance.callWatchers();
+              }
+              break;
+            }
+            case "online": {
+              if (typeof peer.online == "boolean")
+                peerInstance.online = peer.online;
+              if (peer.pos) peerInstance.pos.registerPosition(peer.pos);
+              if (peer.dimension) peerInstance.dimension = peer.dimension;
+
+              peerInstance.callWatchers();
+              break;
             }
           }
         });
@@ -156,7 +182,9 @@ export function InitializeAuthComponent(
       // eslint-disable-next-line
       handlePeerConnection(input: Record<string, any>): void {
         const peer: Player = plainToClass(Player, input);
+        if (!peer.data?.uuid) return;
 
+        peer.instantiatePeerConnection();
         peer.stream = new AudioContext().createMediaStreamDestination().stream;
 
         store.commit("addPeer", peer);
@@ -166,6 +194,17 @@ export function InitializeAuthComponent(
         const peer: Player = plainToClass(Player, input);
 
         store.commit("removePeer", peer);
+      },
+      // eslint-disable-next-line
+      handlePeerInfo(input: Object[]): void {
+        if (input?.length == 0) return;
+        const peers: Player[] = plainToClass(Player, input);
+
+        peers.forEach(peer => {
+          if (!peer.data?.uuid) return;
+          peer.stream = new AudioContext().createMediaStreamDestination().stream;
+          store.commit("addPeer", peer);
+        });
       }
     },
     created() {
@@ -182,6 +221,10 @@ export function InitializeAuthComponent(
         this.loaded = true;
         this.error =
           "WebSocket connection has errored!\nPlease try again later.";
+      };
+
+      socket.onclose = () => {
+        this.error = "WebSocket connection has closed.";
       };
 
       socket.onopen = async () => {
@@ -216,7 +259,7 @@ export function InitializeAuthComponent(
       socket.onmessage = (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
-          if (this.logType == "DEBUG") console.log(data);
+          if (this.logType == LogType.DEBUG) console.log(data);
 
           switch (data.action) {
             case "authenticated": {
@@ -254,6 +297,9 @@ export function InitializeAuthComponent(
             case "peer_disconnect": {
               this.handlePeerDisconnect(data.body);
               break;
+            }
+            case "peer_info": {
+              this.handlePeerInfo(data.body?.peers);
             }
           }
 

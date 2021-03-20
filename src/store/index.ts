@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { Player, PlayerPosition } from "@/helpers/interfaces";
+import { LogType, Player, PlayerPosition } from "@/helpers/interfaces";
 import { plainToClass } from "class-transformer";
 
 Vue.use(Vuex);
@@ -8,27 +8,38 @@ Vue.use(Vuex);
 interface AuthStore {
   token?: string;
   peers: Player[];
+  clientStream?: MediaStream;
+  logType: LogType;
 }
 
 export default new Vuex.Store({
   state: {
     token: undefined,
+    clientStream: undefined,
+    logType:
+      process.env.NODE_ENV === "development" ? LogType.DEBUG : LogType.ERROR,
     peers: [
       plainToClass(Player, {
         data: {
           username: "TestPlayer",
-          uuid: "3234-lkj3-dfsdlkj43"
+          uuid: "testPlayerSpeaker"
         },
-        pos: new PlayerPosition({ x: -49, y: 80, z: 110 })
+        pos: new PlayerPosition({ x: -49.5, y: 80.5, z: 110.5 }),
+        online: true,
+        dimension: "d51dca98-a4e0-4a8d-90e2-2515a57fa34b"
       })
     ] as Player[]
   } as AuthStore,
   mutations: {
     retrieveLocalData(state) {
       const token = localStorage.getItem("token");
-      if (token) {
-        state.token = token;
-      }
+      const logType = localStorage.getItem("logType");
+      if (token) state.token = token;
+      if (logType) state.logType = logType as LogType;
+    },
+    setLogType(state, logType: LogType) {
+      state.logType = logType;
+      localStorage.setItem("logType", logType);
     },
     setToken(state, token?: string) {
       token
@@ -46,6 +57,9 @@ export default new Vuex.Store({
       const index = state.peers.findIndex(p => p.data?.uuid == peer.data?.uuid);
 
       if (index != -1) state.peers.splice(index, 1);
+    },
+    setStream(state, stream?: MediaStream) {
+      state.clientStream = stream;
     }
   },
   // getters: {

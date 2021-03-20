@@ -78,7 +78,8 @@
             "self"
           ]
         }
-      ]
+      ],
+      "@typescript-eslint/class-name-casing": "off"
     }
   },
   "browserslist": [
