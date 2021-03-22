@@ -12,6 +12,7 @@ import {
   LogType,
   PeerUpdateAction,
   Player,
+  PlayerPosition,
   UserUpdateAction,
   WSMessage
 } from "@/helpers/interfaces";
@@ -145,7 +146,7 @@ export function InitializeAuthComponent(
           const peerInstance: Player | undefined = store.state.peers.find(
             p => p.data?.uuid == peer.data?.uuid
           );
-          console.log(peerInstance);
+          // console.log(peerInstance);
           if (!peerInstance) return;
 
           switch (peer.type) {
@@ -202,8 +203,17 @@ export function InitializeAuthComponent(
 
         peers.forEach(peer => {
           if (!peer.data?.uuid) return;
+          if (peer.data.uuid == this.user?.data?.uuid) return;
+
+          if (store.state.peers.find(p => p.data.uuid == peer.data.uuid))
+            return;
           // peer.stream = new AudioContext().createMediaStreamDestination().stream;
-          peer.generateSessionDescription(true);
+          peer.instantiatePeerConnection();
+          // peer
+          //   .generateSessionDescription(true, false)
+          //   .then(e => peer.connection?.setLocalDescription(e));
+          // peer.generateSessionDescription(true, false);
+          // peer.connection?.createOffer();
           store.commit("addPeer", peer);
         });
       }
@@ -252,6 +262,19 @@ export function InitializeAuthComponent(
             this.token = undefined;
             this.authed = false;
           }
+
+          // store.commit(
+          //   "addPeer",
+          //   plainToClass(Player, {
+          //     data: {
+          //       username: "TestPlayer",
+          //       uuid: "testPlayerSpeaker"
+          //     },
+          //     pos: new PlayerPosition({ x: -49.5, y: 80.5, z: 110.5 }),
+          //     online: true,
+          //     dimension: "d51dca98-a4e0-4a8d-90e2-2515a57fa34b"
+          //   })
+          // );
         }
 
         this.loaded = true;
@@ -315,7 +338,9 @@ export function InitializeAuthComponent(
                 );
                 await peer.connection.setRemoteDescription(description);
                 if (description.type == "offer")
-                  await peer.generateSessionDescription(false);
+                  await peer.connection.setLocalDescription(
+                    await peer.generateSessionDescription(false, true)
+                  );
               }
               break;
             }
@@ -359,6 +384,7 @@ interface InnerAuthInterface {
   socket?: WebSocket;
   error?: string;
   authed: boolean;
+  logType: LogType;
 }
 
 export interface AuthInterface extends InnerAuthInterface {

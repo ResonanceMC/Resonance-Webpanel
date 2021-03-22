@@ -1,7 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { LogType, Player, PlayerPosition } from "@/helpers/interfaces";
-import { plainToClass } from "class-transformer";
+import { LogType, Player } from "@/helpers/interfaces";
 
 Vue.use(Vuex);
 
@@ -18,17 +17,7 @@ export default new Vuex.Store({
     clientStream: undefined,
     logType:
       process.env.NODE_ENV === "development" ? LogType.DEBUG : LogType.ERROR,
-    peers: [
-      plainToClass(Player, {
-        data: {
-          username: "TestPlayer",
-          uuid: "testPlayerSpeaker"
-        },
-        pos: new PlayerPosition({ x: -49.5, y: 80.5, z: 110.5 }),
-        online: true,
-        dimension: "d51dca98-a4e0-4a8d-90e2-2515a57fa34b"
-      })
-    ] as Player[]
+    peers: [] as Player[]
   } as AuthStore,
   mutations: {
     retrieveLocalData(state) {
@@ -63,8 +52,11 @@ export default new Vuex.Store({
     },
     setStream(state, stream?: MediaStream) {
       state.clientStream = stream;
-      stream?.getAudioTracks().forEach((track: MediaStreamTrack) => {
-        state.peers.forEach((p: Player) => p?.connection?.addTrack(track));
+      stream?.getTracks().forEach((track: MediaStreamTrack) => {
+        state.peers.forEach((p: Player) => {
+          if (state.clientStream)
+            p?.connection?.addTrack(track, state.clientStream);
+        });
       });
     }
   },

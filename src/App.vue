@@ -10,7 +10,8 @@
     </v-dialog>
     <v-container fluid id="nav">
       <router-link :to="{ name: 'home' }">Home</router-link> |
-      <router-link :to="{ name: 'audio-test' }">Audio Test</router-link>
+      <router-link :to="{ name: 'audio-chat' }">Audio Chat</router-link> |
+      <router-link :to="{ name: 'audio-test' }">Test Audio</router-link>
       <span v-if="$auth.authed"> | </span>
       <a v-if="$auth.authed" href="" @click="logout">Logout</a>
     </v-container>

@@ -7,6 +7,11 @@ import { Expose, Transform } from "class-transformer";
 import { authInfo as auth } from "@/helpers/auth";
 import store from "@/store/index";
 
+export enum LogType {
+  "DEBUG" = "DEBUG",
+  "ERROR" = "ERROR"
+}
+
 interface _PlayerPosition {
   x?: number;
   y?: number;
@@ -159,21 +164,19 @@ export class Player {
     if (this?.__ob__?.dep) this.__ob__.dep.notify();
   }
 
-  constructor() {
-    this.instantiatePeerConnection();
-  }
+  // constructor() {
+  //   auth.waitLoad().then(() => {
+  //     if (this.data.uuid !== auth.user?.data?.uuid)
+  //       this.instantiatePeerConnection();
+  //   });
+  // }
 
   instantiatePeerConnection(): void {
     this.connection = new RTCPeerConnection({
+      iceCandidatePoolSize: 2,
       iceServers: [
         {
-          urls: [
-            "stun:stun.l.google.com:19302",
-            "stun:stun1.l.google.com:19302",
-            "stun:stun2.l.google.com:19302",
-            "stun:stun3.l.google.com:19302",
-            "stun:stun4.l.google.com:19302"
-          ]
+          urls: ["stun:stun.l.google.com:19302"]
         }
       ]
     });
@@ -195,41 +198,94 @@ export class Player {
     };
 
     this.connection.ontrack = (event: RTCTrackEvent) => {
-      if (event.streams?.length > 0) this.stream = event.streams[0];
+      if (event.track) {
+        // this.stream = new MediaStream();
+        // this.stream.addTrack(event.track);
+        this.stream = event.streams[0];
+        console.log("Track was added!", event.track, event.streams[0]);
+      }
+      this.callWatchers();
     };
 
-    this.connection.onnegotiationneeded = () =>
-      this.generateSessionDescription(true);
+    this.connection.onsignalingstatechange = () => {
+      if (store.state.logType == LogType.DEBUG)
+        console.log(`Peer state changed to ${this.connection?.signalingState}`);
+    };
+
+    this.connection.ondatachannel = function(ev) {
+      console.log("Data channel is created!");
+      ev.channel.onopen = function() {
+        console.log("Data channel is open and ready to be used.");
+      };
+      ev.channel.onmessage = msg => console.log("Message received: ", msg);
+    };
+
+    this.connection.onnegotiationneeded = async () => {
+      // if (this.connection?.connectionState == "connected") {
+      await this.connection?.setLocalDescription(
+        await this.generateSessionDescription(true, true)
+      );
+      // }
+    };
+
+    this.connection.oniceconnectionstatechange = () => {
+      if (auth.logType == LogType.DEBUG)
+        console.log(
+          "ICE Candidate State: " + this.connection?.iceConnectionState
+        );
+      if (auth.logType == LogType.DEBUG)
+        console.log(
+          "ICE Gathering State: " + this.connection?.iceGatheringState
+        );
+
+      // Create offer again and send it to remote peer with new candidates
+      // if (this.connection?.iceConnectionState == "checking") {
+      //   this.generateSessionDescription(true, true);
+      // }
+    };
 
     store?.state?.clientStream
-      ?.getAudioTracks()
+      ?.getTracks()
       .forEach((track: MediaStreamTrack) => {
-        this.connection?.addTrack(track);
+        if (store.state.clientStream)
+          this.connection?.addTrack(track, store.state.clientStream);
       });
   }
 
   // if localOffer is true, then it will generate an offer, otherwise will generate a answer description.
-  generateSessionDescription = async (localOffer = true) => {
+  generateSessionDescription = async (
+    localOffer = true,
+    sendOffer = false
+  ): Promise<RTCSessionDescriptionInit> => {
     const offer = localOffer
-      ? await this.connection?.createOffer()
+      ? await this.connection?.createOffer({
+          offerToReceiveAudio: true,
+          voiceActivityDetection: false
+        })
       : await this.connection?.createAnswer();
 
-    if (offer) {
-      await this.connection?.setLocalDescription(offer);
+    if (auth.logType == LogType.DEBUG)
+      console.log(`Generated offer for ${this.data.username}: `, offer);
 
-      await auth.sendWS(
-        {
-          action: "peer_relaysessiondescription",
-          peerId: this.data.uuid,
-          body: {
-            sessionDescription: this?.connection?.localDescription
-          }
-        },
-        true,
-        false
-      );
+    if (offer) {
+      if (sendOffer)
+        auth
+          .sendWS(
+            {
+              action: "peer_relaysessiondescription",
+              peerId: this.data.uuid,
+              body: {
+                sessionDescription: offer
+              }
+            },
+            true,
+            false
+          )
+          .then();
+
+      return offer;
     } else {
-      console.error("Offer was not generated properly!");
+      throw new Error("Offer was not generated properly!");
     }
   };
 }
@@ -258,9 +314,4 @@ export class UserUpdateAction {
 
 export class PeerUpdateAction extends UserUpdateAction {
   @Expose() data!: { username: string; uuid: string };
-}
-
-export enum LogType {
-  "DEBUG" = "DEBUG",
-  "ERROR" = "ERROR"
 }

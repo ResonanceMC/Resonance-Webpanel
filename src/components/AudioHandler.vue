@@ -76,6 +76,7 @@ export default Vue.extend({
       panner: null as PannerNode<AudioContext> | null,
       gainNode: null as GainNode<AudioContext> | null,
       loading: true
+      // stream: undefined
       // posX: 0,
       // posZ: 0,
     };
@@ -83,6 +84,7 @@ export default Vue.extend({
   watch: {
     stream(val) {
       if (!(val instanceof MediaStream)) return;
+      new Audio().srcObject = val;
       this.init();
     },
     pos({ x, y, z }: PlayerPosition) {

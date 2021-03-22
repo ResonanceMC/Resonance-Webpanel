@@ -22,9 +22,16 @@ const routes: Array<RouteConfig> = [
   },
   {
     path: "/audio",
-    name: "audio-test",
+    name: "audio-chat",
     component: () =>
       import(/* webpackChunkName: "audio" */ "@/views/Audio.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/test",
+    name: "audio-test",
+    component: () =>
+      import(/* webpackChunkName: "audio" */ "@/views/AudioTest.vue"),
     meta: { requiresAuth: true }
   },
   {

@@ -19,13 +19,6 @@
       :player="player"
       :audioCtx="audioCtx"
     />
-
-    <audio
-      id="music"
-      src="@/assets/The Musical Guy - Other Guy.mp3"
-      preload="auto"
-      loop
-    />
   </v-container>
   <!--  </v-fade-transition>-->
 </template>
@@ -58,55 +51,6 @@ export default Vue.extend({
   },
   components: { AudioHandler },
   methods: {
-    manualPlay() {
-      const audioNode = document.querySelector("#music") as HTMLMediaElement;
-      audioNode.play();
-      this.manualAudio = false;
-      // this.audioCtx.resume();
-      // audioCtx.resume();
-      this.testMediaStream();
-    },
-    testMediaStream() {
-      const audioNode = document.querySelector("#music") as HTMLMediaElement;
-      // const audioCtx = new AudioContext();
-      audioCtx.resume();
-
-      const source = audioCtx.createMediaElementSource(audioNode);
-
-      const audioDestinationNode = audioCtx.createMediaStreamDestination();
-      const audioDestinationNode2 = audioCtx.createMediaStreamDestination();
-
-      source.connect(audioDestinationNode);
-      source.connect(audioDestinationNode2);
-
-      // audioNode.addEventListener("play", () => {
-      this.$set(this.players[0], "stream", audioDestinationNode.stream);
-      // this.$set(this.players[1], "stream", audioDestinationNode2.stream);
-      // });
-
-      /* setInterval(async () => {
-        const { body } = await this.$auth.sendWS(
-          {
-            action: "user_info"
-          },
-          true
-        );
-
-        let pos = body?.user?.pos;
-
-        if (pos) {
-          pos = { x: 0, y: 0, z: 0, ...pos };
-
-          this.$auth.user.pos.registerPosition(
-            pos.x,
-            pos.y,
-            pos.z,
-            pos.rotation
-          );
-        }
-      }, 1000 / 20); */
-    },
-
     async initiateUserMedia(): Promise<void> {
       try {
         if (!this.$store.state.clientStream) {
@@ -131,36 +75,14 @@ export default Vue.extend({
     }
   },
   mounted() {
-    // if (!navigator.mediaDevices)
-    //   throw new Error("On unsecure connection, cannot establish microphone.");
-
-    const audioNode = document.querySelector("#music") as HTMLMediaElement;
-    setTimeout(() => {
-      audioNode.play().then(
-        () => {
-          this.testMediaStream();
-        },
-        () => {
-          this.manualAudio = true;
-        }
-      );
-    }, 500);
-
     /* eslint-disable-next-line */
     (window as any).audioView = this;
-
-    // const mediaStream: MediaStream = (this.mediaStream = await navigator.mediaDevices.getUserMedia(
-    //   {
-    //     video: false,
-    //     audio: true
-    //   }
-    // ));
   },
   async created() {
     await this.$auth.waitLoad();
     await this.$auth.sendWS({ action: "peer_info" }, true, false);
     await this.$auth.sendWS({ action: "user_connect" }, true, false);
-    // await this.initiateUserMedia();
+    await this.initiateUserMedia();
   },
 
   async destroyed() {
