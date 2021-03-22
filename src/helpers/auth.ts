@@ -209,11 +209,7 @@ export function InitializeAuthComponent(
             return;
           // peer.stream = new AudioContext().createMediaStreamDestination().stream;
           peer.instantiatePeerConnection();
-          // peer
-          //   .generateSessionDescription(true, false)
-          //   .then(e => peer.connection?.setLocalDescription(e));
           // peer.generateSessionDescription(true, false);
-          // peer.connection?.createOffer();
           store.commit("addPeer", peer);
         });
       }
@@ -338,9 +334,7 @@ export function InitializeAuthComponent(
                 );
                 await peer.connection.setRemoteDescription(description);
                 if (description.type == "offer")
-                  await peer.connection.setLocalDescription(
-                    await peer.generateSessionDescription(false, true)
-                  );
+                  await peer.generateSessionDescription(false, true);
               }
               break;
             }

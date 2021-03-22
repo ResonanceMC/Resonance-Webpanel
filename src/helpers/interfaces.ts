@@ -187,9 +187,11 @@ export class Player {
           {
             action: "peer_relayicecandidate",
             peerId: this.data.uuid,
-            iceCandidate: {
-              sdpMLineIndex: event.candidate.sdpMLineIndex,
-              candidate: event.candidate.candidate
+            body: {
+              iceCandidate: {
+                sdpMLineIndex: event.candidate.sdpMLineIndex,
+                candidate: event.candidate.candidate
+              }
             }
           },
           true,
@@ -220,11 +222,9 @@ export class Player {
       ev.channel.onmessage = msg => console.log("Message received: ", msg);
     };
 
-    this.connection.onnegotiationneeded = async () => {
+    this.connection.onnegotiationneeded = () => {
       // if (this.connection?.connectionState == "connected") {
-      await this.connection?.setLocalDescription(
-        await this.generateSessionDescription(true, true)
-      );
+      this.generateSessionDescription(true, true);
       // }
     };
 
@@ -253,10 +253,7 @@ export class Player {
   }
 
   // if localOffer is true, then it will generate an offer, otherwise will generate a answer description.
-  generateSessionDescription = async (
-    localOffer = true,
-    sendOffer = false
-  ): Promise<RTCSessionDescriptionInit> => {
+  generateSessionDescription = async (localOffer = true, sendOffer = false) => {
     const offer = localOffer
       ? await this.connection?.createOffer({
           offerToReceiveAudio: true,
@@ -268,24 +265,26 @@ export class Player {
       console.log(`Generated offer for ${this.data.username}: `, offer);
 
     if (offer) {
-      if (sendOffer)
-        auth
-          .sendWS(
-            {
-              action: "peer_relaysessiondescription",
-              peerId: this.data.uuid,
-              body: {
-                sessionDescription: offer
-              }
-            },
-            true,
-            false
-          )
-          .then();
+      try {
+        await this.connection?.setLocalDescription(offer);
+      } catch (e) {
+        console.error(e);
+      }
 
-      return offer;
+      if (sendOffer)
+        await auth.sendWS(
+          {
+            action: "peer_relaysessiondescription",
+            peerId: this.data.uuid,
+            body: {
+              sessionDescription: this?.connection?.localDescription
+            }
+          },
+          true,
+          false
+        );
     } else {
-      throw new Error("Offer was not generated properly!");
+      console.error("Offer was not generated properly!");
     }
   };
 }
