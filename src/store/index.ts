@@ -52,11 +52,15 @@ export default new Vuex.Store({
     },
     setStream(state, stream?: MediaStream) {
       state.clientStream = stream;
-      stream?.getTracks().forEach((track: MediaStreamTrack) => {
-        state.peers.forEach((p: Player) => {
-          if (state.clientStream)
-            p?.connection?.addTrack(track, state.clientStream);
-        });
+
+      state.peers.forEach((p: Player) => {
+        if (state.clientStream && p.connection) {
+          // const clonedStream = state.clientStream.clone();
+          // stream?.getTracks().forEach((track: MediaStreamTrack) => {
+          //   p?.connection?.addTrack(track, clonedStream);
+          // });
+          p.setClientStream(state.clientStream);
+        }
       });
     }
   },

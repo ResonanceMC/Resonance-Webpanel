@@ -87,9 +87,13 @@ export default Vue.extend({
       new Audio().srcObject = val;
       this.init();
     },
-    pos({ x, y, z }: PlayerPosition) {
-      if (this.panner) {
-        this.positionPanner(this.panner, x, y, z);
+    pos(val: PlayerPosition) {
+      if (val.distance > this.panner.maxDistance + 10) {
+        this.player.muteClientStream();
+        this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
+      } else if (this.panner) {
+        this.player.muteClientStream(false);
+        this.positionPanner(this.panner, val.x, val.y, val.z);
       }
     }
   },

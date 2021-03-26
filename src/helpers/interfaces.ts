@@ -25,6 +25,7 @@ export class PlayerPosition implements Vector3 {
   x: number; // normalized coords
   y: number;
   z: number;
+  distance: number;
   inRange: boolean;
   rotation?: [number, number]; // yaw, pitch
   parent?: PlayerPosition;
@@ -44,6 +45,7 @@ export class PlayerPosition implements Vector3 {
       parent = undefined
     } = {} as _PlayerPosition
   ) {
+    this.distance = 0;
     this.x = x;
     this.y = y;
     this.z = z;
@@ -131,6 +133,7 @@ export class PlayerPosition implements Vector3 {
     const sphericalVector = cartesianToSpherical(diffVector);
     sphericalVector.lat += this.rotation[1];
     sphericalVector.lon += this.rotation[0];
+    player.distance = sphericalVector.radius;
 
     // if (process.env.NODE_ENV === "development") console.log(sphericalVector);
 
@@ -152,7 +155,9 @@ export class Player {
   @Transform(({ value }) => new PlayerPosition({ ...value }))
   @Expose()
   pos!: PlayerPosition;
-  stream?: MediaStream | MediaElementAudioSourceNode;
+  stream?: MediaStream | MediaElementAudioSourceNode; // incoming stream
+  clientStream?: MediaStream; // sending stream
+  muteState!: boolean;
   connection?: RTCPeerConnection;
   @Expose() data!: { username: string; uuid: string };
   @Expose() online!: boolean;
@@ -244,16 +249,35 @@ export class Player {
       // }
     };
 
-    store?.state?.clientStream
-      ?.getTracks()
-      .forEach((track: MediaStreamTrack) => {
-        if (store.state.clientStream)
-          this.connection?.addTrack(track, store.state.clientStream);
-      });
+    const clientStream = store?.state?.clientStream;
+
+    if (clientStream) {
+      // clientStream.getTracks().forEach((track: MediaStreamTrack) => {
+      //   if (store.state.clientStream)
+      //     this.connection?.addTrack(track, clientStream);
+      // });
+      this.setClientStream(clientStream);
+    }
+  }
+
+  setClientStream(outStream: MediaStream) {
+    const stream = (this.clientStream = outStream.clone());
+    stream.getTracks().forEach((track: MediaStreamTrack) => {
+      if (store.state.clientStream) this.connection?.addTrack(track, stream);
+    });
+  }
+
+  muteClientStream(muteState = true) {
+    if (!this.connection || !this.clientStream) return;
+    if (this.muteState == muteState) return;
+    this.muteState = muteState;
+    this.clientStream.getAudioTracks().forEach(track => {
+      track.enabled = muteState;
+    });
   }
 
   // if localOffer is true, then it will generate an offer, otherwise will generate a answer description.
-  generateSessionDescription = async (localOffer = true, sendOffer = false) => {
+  async generateSessionDescription(localOffer = true, sendOffer = false) {
     const offer = localOffer
       ? await this.connection?.createOffer({
           offerToReceiveAudio: true,
@@ -286,7 +310,7 @@ export class Player {
     } else {
       console.error("Offer was not generated properly!");
     }
-  };
+  }
 }
 
 export interface WSMessage {
