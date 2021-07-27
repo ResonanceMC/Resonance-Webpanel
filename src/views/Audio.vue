@@ -10,6 +10,26 @@
       height="100%"
       >Play Audio</v-btn
     >
+    <div
+      class="d-inline-flex justify-center"
+      style="bottom: 30px; left: 0; width: 100%; position: fixed"
+    >
+      <v-btn
+        class="ma-4 rounded-circle"
+        large
+        elevation="4"
+        dark
+        :color="(muteState ? 'red' : 'blue-grey') + ' darken-4'"
+        height="70px"
+        width="70px"
+        min-width="0"
+        @click="toggleMute()"
+      >
+        <v-icon large>{{
+          muteState ? "mdi-microphone-off" : "mdi-microphone"
+        }}</v-icon>
+      </v-btn>
+    </div>
     <div id="player" />
     <AudioHandler
       v-for="player in audioPlayers"
@@ -31,7 +51,7 @@ import { Player } from "@/helpers/interfaces";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
-const audioCtx = new AudioContext();
+// const audioCtx = new AudioContext();
 
 export default Vue.extend({
   name: "Audio",
@@ -39,7 +59,8 @@ export default Vue.extend({
     return {
       manualAudio: false,
       audioCtx: new AudioContext(),
-      players: this.$store.state.peers
+      players: this.$store.state.peers,
+      muteState: this.$store.state.muted
     };
   },
   computed: {
@@ -72,6 +93,18 @@ export default Vue.extend({
           });
         this.$store.commit("setStream", undefined);
       }
+    },
+    updateMuteState(
+      state: boolean = this.$store.state.muted ?? this.muteState
+    ) {
+      this.$store.commit("setMuteState", state);
+      this.$store.state.clientStream
+        .getAudioTracks()
+        .forEach((track: MediaStreamTrack) => (track.enabled = !state));
+    },
+    toggleMute() {
+      this.muteState = !this.muteState;
+      this.updateMuteState(this.muteState);
     }
   },
   mounted() {
@@ -83,6 +116,7 @@ export default Vue.extend({
     await this.$auth.sendWS({ action: "peer_info" }, true, false);
     await this.$auth.sendWS({ action: "user_connect" }, true, false);
     await this.initiateUserMedia();
+    this.updateMuteState();
   },
 
   async destroyed() {

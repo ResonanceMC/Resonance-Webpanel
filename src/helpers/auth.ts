@@ -1,9 +1,7 @@
 import { plainToClass } from "class-transformer";
 
 const PORT = "";
-// const HOST = "thiccaxe.net/ws";
 const HOST = "resonance.razboy.dev";
-// const HOST = "148.251.144.4:25560";
 
 import router from "@/router";
 import store from "@/store/index";
@@ -12,7 +10,6 @@ import {
   LogType,
   PeerUpdateAction,
   Player,
-  PlayerPosition,
   UserUpdateAction,
   WSMessage
 } from "@/helpers/interfaces";
@@ -65,7 +62,7 @@ export function InitializeAuthComponent(
     },
     methods: {
       // eslint-disable-next-line
-      sendWS(data: Record<string, any>, sendBearer?: boolean, expectReturn: boolean = true): Promise<WSMessage> {
+            sendWS(data: Record<string, any>, sendBearer?: boolean, expectReturn: boolean = true): Promise<WSMessage> {
         return new Promise<WSMessage>((resolve, reject) => {
           if (!this.socket) throw Error("Socket is not defined yet.");
           if (this.socket.readyState != this.socket.OPEN) {
@@ -121,7 +118,7 @@ export function InitializeAuthComponent(
       },
 
       // eslint-disable-next-line
-      handleUserUpdate(input: Record<string, any>): void {
+            handleUserUpdate(input: Record<string, any>): void {
         const data = plainToClass(UserUpdateAction, input);
 
         switch (data.type) {
@@ -137,7 +134,7 @@ export function InitializeAuthComponent(
         }
       },
       // eslint-disable-next-line
-      handlePeerUpdate(input: Object[]): void {
+            handlePeerUpdate(input: Object[]): void {
         const data = plainToClass(PeerUpdateAction, input);
 
         if (!this.user.online) return;
@@ -181,7 +178,7 @@ export function InitializeAuthComponent(
         });
       },
       // eslint-disable-next-line
-      handlePeerConnection(input: Record<string, any>): void {
+            handlePeerConnection(input: Record<string, any>): void {
         const peer: Player = plainToClass(Player, input);
         if (!peer.data?.uuid) return;
 
@@ -191,13 +188,13 @@ export function InitializeAuthComponent(
         store.commit("addPeer", peer);
       },
       // eslint-disable-next-line
-      handlePeerDisconnect(input: Record<string, any>): void {
+            handlePeerDisconnect(input: Record<string, any>): void {
         const peer: Player = plainToClass(Player, input);
 
         store.commit("removePeer", peer);
       },
       // eslint-disable-next-line
-      handlePeerInfo(input: Object[]): void {
+            handlePeerInfo(input: Object[]): void {
         if (input?.length == 0) return;
         const peers: Player[] = plainToClass(Player, input);
 
@@ -216,7 +213,7 @@ export function InitializeAuthComponent(
     },
     created() {
       /* eslint-disable-next-line */
-      (window as any).auth = this;
+            (window as any).auth = this;
 
       const socket = (this.socket = new WebSocket(
         `wss://${HOST}${PORT ? ":" + PORT : ""}`
@@ -384,7 +381,7 @@ interface InnerAuthInterface {
 export interface AuthInterface extends InnerAuthInterface {
   sendWS(
     /* eslint-disable-next-line */
-    data: Record<string, any>,
+        data: Record<string, any>,
     sendBearer?: boolean,
     expectReturn?: boolean
   ): Promise<string>;

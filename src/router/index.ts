@@ -16,7 +16,7 @@ const routes: Array<RouteConfig> = [
     component: () =>
       import(/* webpackChunkName: "login" */ "@/views/Login.vue"),
     beforeEnter(_to, _from, next) {
-      !store.state.token ? next() : next({ name: "audio-test" });
+      !store.state.token ? next() : next({ name: "audio-chat" });
     },
     props: true
   },
@@ -32,7 +32,7 @@ const routes: Array<RouteConfig> = [
     name: "audio-test",
     component: () =>
       import(/* webpackChunkName: "audio" */ "@/views/AudioTest.vue"),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: false }
   },
   {
     path: "*",
