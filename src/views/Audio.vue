@@ -10,10 +10,7 @@
       height="100%"
       >Play Audio</v-btn
     >
-    <div
-      class="d-inline-flex justify-center"
-      style="bottom: 30px; left: 0; width: 100%; position: fixed"
-    >
+    <div class="d-inline-flex justify-center control-buttons">
       <v-btn
         class="ma-4 rounded-circle"
         large
@@ -146,5 +143,13 @@ export default Vue.extend({
   width: 30px;
   height: 30px;
   background-color: lightcoral;
+}
+
+.control-buttons {
+  bottom: 30px;
+  left: 0;
+  width: 100%;
+  position: fixed;
+  z-index: 10;
 }
 </style>
