@@ -14,7 +14,7 @@
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.1.13",
     "sharp": "^0.27.2",
-    "standardized-audio-context": "^25.1.9",
+    "standardized-audio-context": "^25.3.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",

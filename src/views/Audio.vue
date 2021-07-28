@@ -64,7 +64,13 @@ export default Vue.extend({
       try {
         if (!this.$store.state.clientStream) {
           const stream: MediaStream = await navigator.mediaDevices.getUserMedia(
-            { audio: true }
+            {
+              audio: {
+                autoGainControl: true,
+                echoCancellation: true,
+                noiseSuppression: true
+              }
+            }
           );
           this.$store.commit("setStream", stream);
         }
@@ -87,10 +93,10 @@ export default Vue.extend({
     ) {
       this.$store.commit("setMuteState", state);
       this.$store.state.clientStream
-        .getAudioTracks()
-        .forEach((track: MediaStreamTrack) => (track.enabled = !state));
+        ?.getAudioTracks()
+        ?.forEach((track: MediaStreamTrack) => (track.enabled = !state));
 
-      this.players.forEach(player => player.muteClientStream(state));
+      this.players.forEach((player: Player) => player.muteClientStream(state));
     },
     toggleMute() {
       this.muteState = !this.muteState;
