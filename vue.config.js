@@ -27,5 +27,17 @@ module.exports = {
       args[0].workers = 4;
       return args;
     });
+
+    config.plugin("copy").tap(([pathConfigs]) => {
+      pathConfigs[0] = Object.assign(pathConfigs[0], {
+        transform(content) {
+          return content
+            .toString()
+            .replace("__PORT__", process.env.port)
+            .replace("__HOST__", process.env.host);
+        }
+      });
+      return [pathConfigs];
+    });
   }
 };

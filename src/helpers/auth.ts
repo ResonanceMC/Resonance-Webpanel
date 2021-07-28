@@ -1,7 +1,6 @@
 import { plainToClass } from "class-transformer";
 
-const PORT = "";
-const HOST = "resonance.razboy.dev";
+const { port: PORT, host: HOST } = window.__env.websocket;
 
 import router from "@/router";
 import store from "@/store/index";

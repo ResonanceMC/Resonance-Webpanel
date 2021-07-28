@@ -1,5 +1,12 @@
 import Vue, { VNode } from "vue";
 
+interface AppSettings {
+  websocket: {
+    port: string;
+    host: string;
+  };
+}
+
 declare global {
   namespace JSX {
     // tslint:disable no-empty-interface
@@ -11,9 +18,8 @@ declare global {
     }
   }
 }
-// declare global {
-//   interface Window {
-//     webkitAudioContext: typeof AudioContext;
-//     webkitAudioPannerNode: typeof PannerNode;
-//   }
-// }
+declare global {
+  interface Window {
+    __env: typeof AppSettings;
+  }
+}
