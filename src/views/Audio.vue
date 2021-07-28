@@ -1,15 +1,6 @@
 <template>
   <!--  <v-fade-transition hide-on-leave>-->
   <v-container class="overflow-hidden" fill-height fluid>
-    <v-btn
-      v-if="manualAudio"
-      @click="manualPlay"
-      class="centerBtn"
-      depressed
-      block
-      height="100%"
-      >Play Audio</v-btn
-    >
     <div class="d-inline-flex justify-center control-buttons">
       <v-btn
         class="ma-4 rounded-circle"
@@ -98,6 +89,8 @@ export default Vue.extend({
       this.$store.state.clientStream
         .getAudioTracks()
         .forEach((track: MediaStreamTrack) => (track.enabled = !state));
+
+      this.players.forEach(player => player.muteClientStream(state));
     },
     toggleMute() {
       this.muteState = !this.muteState;

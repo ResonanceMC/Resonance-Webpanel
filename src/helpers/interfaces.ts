@@ -178,7 +178,7 @@ export class Player {
 
   instantiatePeerConnection(): void {
     this.connection = new RTCPeerConnection({
-      iceCandidatePoolSize: 2,
+      // iceCandidatePoolSize: 2,
       iceServers: [
         {
           urls: ["stun:stun.l.google.com:19302"]
@@ -228,9 +228,9 @@ export class Player {
     };
 
     this.connection.onnegotiationneeded = () => {
-      // if (this.connection?.connectionState == "connected") {
-      this.generateSessionDescription(true, true);
-      // }
+      if (this.connection?.connectionState == "connected") {
+        this.generateSessionDescription(true, true);
+      }
     };
 
     this.connection.oniceconnectionstatechange = () => {
@@ -272,7 +272,7 @@ export class Player {
     if (this.muteState == muteState) return;
     this.muteState = muteState;
     this.clientStream.getAudioTracks().forEach(track => {
-      track.enabled = muteState;
+      track.enabled = store.state.muted ? false : !this.muteState;
     });
   }
 

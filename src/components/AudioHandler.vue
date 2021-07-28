@@ -89,7 +89,7 @@ export default Vue.extend({
     },
     pos(val: PlayerPosition) {
       if (val.distance > this.panner.maxDistance + 10) {
-        this.player.muteClientStream();
+        this.player.muteClientStream(true);
         this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
       } else if (this.panner) {
         this.player.muteClientStream(false);

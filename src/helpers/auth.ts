@@ -183,6 +183,7 @@ export function InitializeAuthComponent(
         if (!peer.data?.uuid) return;
 
         peer.instantiatePeerConnection();
+        peer.generateSessionDescription(true, true);
         peer.stream = new AudioContext().createMediaStreamDestination().stream;
 
         store.commit("addPeer", peer);
