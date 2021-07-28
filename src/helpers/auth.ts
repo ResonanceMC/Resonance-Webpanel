@@ -276,7 +276,12 @@ export function InitializeAuthComponent(
       socket.onmessage = async (event: MessageEvent) => {
         try {
           const data = JSON.parse(event.data);
-          if (this.logType == LogType.DEBUG) console.log(data);
+          if (
+            this.logType == LogType.DEBUG &&
+            data.action != "peer_update" &&
+            data.action != "user_update"
+          )
+            console.log(data);
 
           switch (data.action) {
             case "authenticated": {
