@@ -10,6 +10,7 @@ interface AuthStore {
   clientStream?: MediaStream;
   logType: LogType;
   muted: boolean;
+  debug: boolean;
 }
 
 export default new Vuex.Store({
@@ -17,6 +18,7 @@ export default new Vuex.Store({
     token: undefined,
     clientStream: undefined,
     muted: true,
+    debug: process.env.NODE_ENV === "development",
     logType:
       process.env.NODE_ENV === "development" ? LogType.DEBUG : LogType.ERROR,
     peers: [] as Player[]
@@ -26,13 +28,19 @@ export default new Vuex.Store({
       const token = localStorage.getItem("token");
       const logType = localStorage.getItem("logType");
       const muted = localStorage.getItem("muted");
+      const debug = localStorage.getItem("debug");
       if (token) state.token = token;
       if (logType) state.logType = logType as LogType;
       if (muted) state.muted = muted == "true";
+      if (debug) state.debug = debug == "true";
     },
     setLogType(state, logType: LogType) {
       state.logType = logType;
       localStorage.setItem("logType", logType);
+    },
+    setDebugState(state, debug: boolean) {
+      state.debug = debug;
+      localStorage.setItem("debug", String(debug));
     },
     setToken(state, token?: string) {
       token

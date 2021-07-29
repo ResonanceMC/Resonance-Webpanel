@@ -33,7 +33,8 @@ export function InitializeAuthComponent(
       return {
         loaded: false,
         authed: false,
-        user: {} as Player
+        user: {} as Player,
+        debug: process.env.NODE_ENV !== "PRODUCTION"
       } as InnerAuthInterface;
     },
     computed: {
@@ -51,6 +52,14 @@ export function InitializeAuthComponent(
         },
         set(val: LogType): void {
           store.commit("setLogType", val);
+        }
+      },
+      debug: {
+        get(): boolean {
+          return store.state.debug;
+        },
+        set(val: boolean): void {
+          store.commit("setDebugState", val);
         }
       }
     },
@@ -381,6 +390,7 @@ interface InnerAuthInterface {
   error?: string;
   authed: boolean;
   logType: LogType;
+  debug: boolean;
 }
 
 export interface AuthInterface extends InnerAuthInterface {

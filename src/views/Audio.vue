@@ -107,11 +107,7 @@ export default Vue.extend({
     }
   },
   mounted() {
-    if (
-      this.$auth.logType == LogType.DEBUG ||
-      this.$auth.logType == LogType.DEV
-    )
-      window.audioView = this;
+    if (this.$auth.debug) window.audioView = this;
   },
   async created() {
     await this.$auth.waitLoad();
