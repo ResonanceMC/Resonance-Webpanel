@@ -12,6 +12,7 @@
             <div
               v-on="on"
               class="speaker"
+              :class="{ active: speaking }"
               :id="`speaker-${player.data.uuid}`"
               :style="
                 `top: calc(50% - ${pos.z * 10}px);
@@ -40,9 +41,15 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
+const { port: PORT, host: HOST } = window.__env.websocket;
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
-import { AudioContext, PannerNode, GainNode } from "standardized-audio-context";
+import {
+  AudioContext,
+  PannerNode,
+  GainNode,
+  AudioWorkletNode
+} from "standardized-audio-context";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -75,7 +82,8 @@ export default Vue.extend({
       // audioCtx: null as AudioContext | null,
       panner: null as PannerNode<AudioContext> | null,
       gainNode: null as GainNode<AudioContext> | null,
-      loading: true
+      loading: true,
+      speaking: false
       // stream: undefined
       // posX: 0,
       // posZ: 0,
@@ -155,8 +163,8 @@ export default Vue.extend({
 
       panner.panningModel = "HRTF";
       panner.distanceModel = "inverse";
-      panner.refDistance = 10;
-      panner.maxDistance = 40;
+      panner.refDistance = process.env.refDistance ?? 3;
+      panner.maxDistance = process.env.maxDistance ?? 20;
       panner.rolloffFactor = 1;
       panner.coneInnerAngle = 360;
       panner.coneOuterAngle = 0;
@@ -166,8 +174,17 @@ export default Vue.extend({
       // audioCtx.listener.positionZ.value = 100;
       // audioCtx.listener.forwardZ.value = 1;
 
+      const soundMeterNode = new AudioWorkletNode(
+        audioCtx,
+        "sound-meter-processor"
+      );
+      soundMeterNode.port.onmessage = e => {
+        this.speaking = e.data > 0.01 && !this.muteState;
+      };
+
       source.connect(panner);
       panner.connect(gainNode);
+      gainNode.connect(soundMeterNode);
       gainNode.connect(audioCtx.destination);
 
       // this.test();
@@ -236,7 +253,10 @@ export default Vue.extend({
       window.requestAnimationFrame(tick);
     }
   },
-  mounted() {
+  async mounted() {
+    await this.audioCtx.audioWorklet.addModule(
+      "/processors/sound-meter-processor.js"
+    );
     if (this.stream) this.init();
   },
   destroyed() {
@@ -260,5 +280,8 @@ export default Vue.extend({
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 5;
+}
+.active {
+  border: #3ac184 5px solid !important;
 }
 </style>

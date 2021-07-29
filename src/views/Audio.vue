@@ -4,6 +4,8 @@
     <div class="d-inline-flex justify-center control-buttons">
       <v-btn
         class="ma-4 rounded-circle"
+        :class="{ speaking: speaking }"
+        id="mute-button"
         large
         elevation="4"
         dark
@@ -34,7 +36,7 @@
 <script lang="ts">
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
-import { AudioContext } from "standardized-audio-context";
+import { AudioContext, AudioWorkletNode } from "standardized-audio-context";
 import { Player } from "@/helpers/interfaces";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -48,7 +50,8 @@ export default Vue.extend({
       manualAudio: false,
       audioCtx: new AudioContext(),
       players: this.$store.state.peers,
-      muteState: this.$store.state.muted
+      muteState: this.$store.state.muted,
+      speaking: false
     };
   },
   computed: {
@@ -113,9 +116,27 @@ export default Vue.extend({
     await this.$auth.sendWS({ action: "user_connect" }, true, false);
     await this.initiateUserMedia();
     this.updateMuteState();
+    if (this.$store.state.clientStream) {
+      const source = this.audioCtx.createMediaStreamSource(
+        this.$store.state.clientStream
+      );
+      await this.audioCtx.audioWorklet.addModule(
+        "/processors/sound-meter-processor.js"
+      );
+      const soundMeterNode = new AudioWorkletNode(
+        this.audioCtx,
+        "sound-meter-processor"
+      );
+      soundMeterNode.port.onmessage = e => {
+        this.speaking = e.data > 0.03 && !this.muteState;
+      };
+      source.connect(soundMeterNode);
+    }
   },
 
-  async destroyed() {
+  async beforeDestroy() {
+    await this.audioCtx.close();
+    this.audioCtx = null;
     await this.$auth.waitLoad();
     await this.$auth.sendWS({ action: "user_disconnect" }, true, false);
     await this.stopUserMedia();
@@ -150,5 +171,9 @@ export default Vue.extend({
   width: 100%;
   position: fixed;
   z-index: 10;
+}
+
+#mute-button.speaking {
+  border: #3ac184 5px solid !important;
 }
 </style>
