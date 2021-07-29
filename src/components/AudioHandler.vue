@@ -17,7 +17,7 @@
               :style="
                 `top: calc(50% - ${pos.z * 10}px);
             left: calc(50% + ${pos.x * 10}px);
-            background-image: url(https://minotar.net/helm/${
+            background: center url(https://minotar.net/helm/${
               player.data.uuid
             }/50.png);`
               "
@@ -285,6 +285,6 @@ export default Vue.extend({
   z-index: 5;
 }
 .active {
-  border: #3ac184 5px solid !important;
+  border: #3ac184 6px solid !important;
 }
 </style>

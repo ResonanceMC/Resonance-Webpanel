@@ -7,8 +7,8 @@
     host: "__HOST__"
   };
   window.__env.audioSettings = {
-    refDistance: "__REF_DISTANCE__",
-    maxDistance: "__MAX_DISTANCE__"
+    refDistance: __REF_DISTANCE__,
+    maxDistance: __MAX_DISTANCE__
   };
 
   if (window.__env.websocket.host.length === 0)
