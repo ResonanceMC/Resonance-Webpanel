@@ -39,6 +39,12 @@ const routes: Array<RouteConfig> = [
     name: "404-error",
     component: () =>
       import(/* webpackChunkName: "404" */ "@/views/PageNotFound.vue")
+  },
+  {
+    path: "/offline",
+    name: "offline",
+    component: () =>
+      import(/* webpackChunkName: "offline" */ "@/views/Offline.vue")
   }
 ];
 
@@ -50,6 +56,16 @@ const router = new VueRouter({
 router.beforeEach((to, _from, next) => {
   if (to.matched.some(route => route.meta.requiresAuth) && !store.state.token) {
     next({ name: "login" });
+  } else if (
+    to.matched.some(route => route.name == "offline") &&
+    navigator.onLine
+  ) {
+    next({ name: "home" });
+  } else if (
+    !to.matched.some(route => route.name == "offline") &&
+    !navigator.onLine
+  ) {
+    next({ name: "offline" });
   } else next();
 });
 export default router;

@@ -8,8 +8,8 @@
       depressed
       block
       height="100%"
-      >Play Audio</v-btn
-    >
+      >Play Audio
+    </v-btn>
     <div id="player" />
     <AudioHandler
       v-for="player in players"

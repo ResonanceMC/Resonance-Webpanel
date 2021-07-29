@@ -1,6 +1,16 @@
 <template>
   <!--  <v-fade-transition hide-on-leave>-->
   <v-container class="overflow-hidden" fill-height fluid>
+    <v-btn
+      v-if="manualAudio"
+      @click="onInteraction"
+      class="centerBtn"
+      depressed
+      block
+      height="100%"
+      color="green darken-1"
+      >Start Audio
+    </v-btn>
     <div class="d-inline-flex justify-center control-buttons">
       <v-btn
         class="ma-4 rounded-circle"
@@ -37,7 +47,7 @@
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
 import { AudioContext, AudioWorkletNode } from "standardized-audio-context";
-import { LogType, Player } from "@/helpers/interfaces";
+import { Player } from "@/helpers/interfaces";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -104,6 +114,10 @@ export default Vue.extend({
     toggleMute() {
       this.muteState = !this.muteState;
       this.updateMuteState(this.muteState);
+    },
+    onInteraction() {
+      this.audioCtx.resume();
+      this.manualAudio = false;
     }
   },
   mounted() {
@@ -132,6 +146,10 @@ export default Vue.extend({
         };
         source.connect(soundMeterNode);
       }
+    }
+
+    if (this.audioCtx.state == "suspended") {
+      this.manualAudio = true;
     }
   },
 

@@ -1,0 +1,38 @@
+{
+  "short_name": "Resonance",
+  "name": "Resonance: Proximity Chat",
+  "icons": [
+    {
+      "src": "/pwa/images/logo-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/pwa/images/logo-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "display": "minimal-ui",
+  "scope": "/",
+  "theme_color": "#f0a31b",
+  "shortcuts": [
+    {
+      "name": "Resonance: Audio Chat",
+      "short_name": "Audio Chat",
+      "description": "Open proximity chat directly",
+      "url": "/audio",
+      "icons": [{ "src": "/pwa/images/logo-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "description": "Proximity chat mod and plugin for Minecraft servers.",
+  "screenshots": [
+    {
+      "src": "/pwa/images/screenshot1.png",
+      "type": "image/png",
+      "sizes": "540x720"
+    }
+  ]
+}
