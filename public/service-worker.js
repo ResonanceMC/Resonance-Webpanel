@@ -22,17 +22,30 @@ const CACHE_NAME = "offline";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      // Setting {cache: 'reload'} in the new request will ensure that the
-      // response isn't fulfilled from the HTTP cache; i.e., it will be from
-      // the network.
-      await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
-    })()
-  );
-  // Force the waiting service worker to become the active service worker.
-  self.skipWaiting();
+  // event.waitUntil(
+  //   (async () => {
+  //     const cache = await caches.open(CACHE_NAME);
+  //     // Setting {cache: 'reload'} in the new request will ensure that the
+  //     // response isn't fulfilled from the HTTP cache; i.e., it will be from
+  //     // the network.
+  //     await cache.add(new Request(OFFLINE_URL, { cache: "reload" }));
+  //   })()
+  // );
+  // // Force the waiting service worker to become the active service worker.
+  // self.skipWaiting();
+  // console.log("INSTALLING...");
+  event.waitUntil(self.skipWaiting());
+});
+
+// From https://stackoverflow.com/a/55543550
+self.addEventListener("message", event => {
+  if (event.data.type === "CACHE_URLS") {
+    event.waitUntil(
+      caches.open(CACHE_NAME).then(async cache => {
+        return await cache.addAll(event.data.payload);
+      })
+    );
+  }
 });
 
 self.addEventListener("activate", event => {
@@ -51,6 +64,17 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+  // // console.log(event.request.url);
+  // event.waitUntil(
+  //   (async () => {
+  //     try {
+  //       const response = await caches.match(event.request);
+  //       return response || (await fetch(event.request));
+  //     } catch (err) {
+  //       console.error("Failed to fetch: ", event.request, err);
+  //     }
+  //   })()
+  // );
   // We only want to call event.respondWith() if this is a navigation request
   // for an HTML page.
   if (event.request.mode === "navigate") {
@@ -71,19 +95,13 @@ self.addEventListener("fetch", event => {
           // due to a network error.
           // If fetch() returns a valid HTTP response with a response code in
           // the 4xx or 5xx range, the catch() will NOT be called.
-          console.log("Fetch failed; returning offline page instead.", error);
+          // console.log("Fetch failed; returning offline page instead.", error);
 
           const cache = await caches.open(CACHE_NAME);
-          const cachedResponse = await cache.match(OFFLINE_URL);
+          const cachedResponse = await cache.match(event.request);
           return cachedResponse;
         }
       })()
     );
   }
-
-  // If our if() condition is false, then this fetch handler won't intercept the
-  // request. If there are any other fetch handlers registered, they will get a
-  // chance to call event.respondWith(). If no fetch handlers call
-  // event.respondWith(), the request will be handled by the browser as if there
-  // were no service worker involvement.
 });

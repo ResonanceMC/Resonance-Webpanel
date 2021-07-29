@@ -8,7 +8,7 @@
       depressed
       block
       height="100%"
-      color="green darken-1"
+      color="yellow darken-2"
       >Start Audio
     </v-btn>
     <div class="d-inline-flex justify-center control-buttons">
@@ -89,6 +89,7 @@ export default Vue.extend({
         }
       } catch (e) {
         console.error("User declined request for microphone access!");
+        this.muteState = true;
       }
     },
     stopUserMedia(): void {
@@ -112,6 +113,7 @@ export default Vue.extend({
       this.players.forEach((player: Player) => player.muteClientStream(state));
     },
     toggleMute() {
+      if (!this.$store.state.clientStream) return;
       this.muteState = !this.muteState;
       this.updateMuteState(this.muteState);
     },

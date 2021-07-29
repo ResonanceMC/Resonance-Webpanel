@@ -96,6 +96,7 @@ export default Vue.extend({
       this.init();
     },
     pos(val: PlayerPosition) {
+      if (!this.stream) return;
       if (val.distance > this.panner.maxDistance + 10) {
         this.player.muteClientStream(true);
         this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
@@ -103,6 +104,10 @@ export default Vue.extend({
         this.player.muteClientStream(false);
         this.positionPanner(this.panner, val.x, val.y, val.z);
       }
+    },
+    player(val: Player) {
+      if (val.connection?.connectionState == "connected" && this.loading)
+        this.init();
     }
   },
   methods: {
@@ -145,56 +150,58 @@ export default Vue.extend({
       // );
     },
     init() {
-      const audioCtx: AudioContext = this.audioCtx;
-
-      audioCtx.resume();
-
-      // const source = audioCtx.createMediaElementSource(audioNode);
-
-      if (!this.stream) {
-        throw Error("Media stream has not been instantiated yet!");
-      }
-      const source = audioCtx.createMediaStreamSource(this.stream);
-
-      this.loading = false;
-
-      const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
-      const gainNode: GainNode<AudioContext> = (this.gainNode = audioCtx.createGain());
-
-      panner.panningModel = "HRTF";
-      panner.distanceModel = "inverse";
-      panner.refDistance = refDistance ?? 3;
-      panner.maxDistance = maxDistance ?? 20;
-      panner.rolloffFactor = 1;
-      panner.coneInnerAngle = 360;
-      panner.coneOuterAngle = 0;
-      panner.coneOuterGain = 0;
-      this.positionPanner(panner, this.pos.x, this.pos.y, this.pos.z);
-
-      // audioCtx.listener.positionZ.value = 100;
-      // audioCtx.listener.forwardZ.value = 1;
-
-      if (AudioWorkletNode) {
-        const soundMeterNode = new AudioWorkletNode(
-          audioCtx,
-          "sound-meter-processor"
-        );
-        soundMeterNode.port.onmessage = e => {
-          this.speaking = e.data > 0.01 && !this.muteState;
-        };
-
-        gainNode.connect(soundMeterNode);
-      }
-
-      source.connect(panner);
-      panner.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      // this.test();
-
       this.$auth.waitLoad().then(() => {
         this.pos.setParent(this.$auth.user.pos);
       });
+
+      const audioCtx: AudioContext = this.audioCtx;
+
+      // const source = audioCtx.createMediaElementSource(audioNode);
+      this.loading =
+        this.player.connection?.connectionState != "connected" && !this.stream;
+
+      if (this.stream) {
+        audioCtx.resume();
+        const source = audioCtx.createMediaStreamSource(this.stream);
+
+        const panner: PannerNode<AudioContext> = (this.panner = audioCtx.createPanner());
+        const gainNode: GainNode<AudioContext> = (this.gainNode = audioCtx.createGain());
+
+        panner.panningModel = "HRTF";
+        panner.distanceModel = "inverse";
+        panner.refDistance = refDistance ?? 3;
+        panner.maxDistance = maxDistance ?? 20;
+        panner.rolloffFactor = 1;
+        panner.coneInnerAngle = 360;
+        panner.coneOuterAngle = 0;
+        panner.coneOuterGain = 0;
+        this.positionPanner(panner, this.pos.x, this.pos.y, this.pos.z);
+
+        // audioCtx.listener.positionZ.value = 100;
+        // audioCtx.listener.forwardZ.value = 1;
+
+        if (AudioWorkletNode) {
+          try {
+            const soundMeterNode = new AudioWorkletNode(
+              audioCtx,
+              "sound-meter-processor"
+            );
+            soundMeterNode.port.onmessage = e => {
+              this.speaking = e.data > 0.01 && !this.muteState;
+            };
+
+            gainNode.connect(soundMeterNode);
+          } catch (e) {
+            console.error("Failed to initialize sound meter: ", e);
+          }
+        }
+
+        source.connect(panner);
+        panner.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+      }
+
+      // this.test();
     },
     test() {
       const keys: { [key in string]?: boolean } = {

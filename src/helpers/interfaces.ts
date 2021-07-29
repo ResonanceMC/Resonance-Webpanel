@@ -219,6 +219,16 @@ export class Player {
         console.log(`Peer state changed to ${this.connection?.signalingState}`);
     };
 
+    this.connection.onconnectionstatechange = () => {
+      if (this.connection?.connectionState == "connected") {
+        if (store.state.logType == LogType.DEBUG)
+          console.log(
+            "WebRTC connection established with peer " + this.data.username
+          );
+        this.callWatchers();
+      }
+    };
+
     this.connection.ondatachannel = function(ev) {
       console.log("Data channel is created!");
       ev.channel.onopen = function() {
