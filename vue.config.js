@@ -18,13 +18,15 @@ module.exports = {
     plugins: [
       new CopyWebpackPlugin([
         {
-          from: "public/config",
+          from: "src/config",
           to: "config",
           transform(content) {
             return content
               .toString()
-              .replace("__PORT__", process.env.port)
-              .replace("__HOST__", process.env.host);
+              .replace("__PORT__", process.env.port ?? "")
+              .replace("__HOST__", process.env.host ?? "")
+              .replace("__REF_DISTANCE__", process.env.refDistance ?? "3")
+              .replace("__MAX_DISTANCE__", process.env.maxDistance ?? "20");
           },
           ignore: [".DS_Store"]
         }

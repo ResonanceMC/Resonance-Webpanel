@@ -123,14 +123,16 @@ export default Vue.extend({
       await this.audioCtx.audioWorklet.addModule(
         "/processors/sound-meter-processor.js"
       );
-      const soundMeterNode = new AudioWorkletNode(
-        this.audioCtx,
-        "sound-meter-processor"
-      );
-      soundMeterNode.port.onmessage = e => {
-        this.speaking = e.data > 0.03 && !this.muteState;
-      };
-      source.connect(soundMeterNode);
+      if (AudioWorkletNode) {
+        const soundMeterNode = new AudioWorkletNode(
+          this.audioCtx,
+          "sound-meter-processor"
+        );
+        soundMeterNode.port.onmessage = e => {
+          this.speaking = e.data > 0.03 && !this.muteState;
+        };
+        source.connect(soundMeterNode);
+      }
     }
   },
 

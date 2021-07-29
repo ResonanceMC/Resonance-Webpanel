@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-const { port: PORT, host: HOST } = window.__env.websocket;
+const { refDistance, maxDistance } = window.__env.audioSettings;
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
 import {
@@ -163,8 +163,8 @@ export default Vue.extend({
 
       panner.panningModel = "HRTF";
       panner.distanceModel = "inverse";
-      panner.refDistance = process.env.refDistance ?? 3;
-      panner.maxDistance = process.env.maxDistance ?? 20;
+      panner.refDistance = refDistance ?? 3;
+      panner.maxDistance = maxDistance ?? 20;
       panner.rolloffFactor = 1;
       panner.coneInnerAngle = 360;
       panner.coneOuterAngle = 0;
@@ -174,17 +174,20 @@ export default Vue.extend({
       // audioCtx.listener.positionZ.value = 100;
       // audioCtx.listener.forwardZ.value = 1;
 
-      const soundMeterNode = new AudioWorkletNode(
-        audioCtx,
-        "sound-meter-processor"
-      );
-      soundMeterNode.port.onmessage = e => {
-        this.speaking = e.data > 0.01 && !this.muteState;
-      };
+      if (AudioWorkletNode) {
+        const soundMeterNode = new AudioWorkletNode(
+          audioCtx,
+          "sound-meter-processor"
+        );
+        soundMeterNode.port.onmessage = e => {
+          this.speaking = e.data > 0.01 && !this.muteState;
+        };
+
+        gainNode.connect(soundMeterNode);
+      }
 
       source.connect(panner);
       panner.connect(gainNode);
-      gainNode.connect(soundMeterNode);
       gainNode.connect(audioCtx.destination);
 
       // this.test();

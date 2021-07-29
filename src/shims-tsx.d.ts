@@ -5,6 +5,10 @@ interface AppSettings {
     port: string;
     host: string;
   };
+  audioSettings: {
+    refDistance: number;
+    maxDistance: number;
+  };
 }
 
 declare global {
