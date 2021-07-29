@@ -17,7 +17,7 @@
               :style="
                 `top: calc(50% - ${pos.z * 10}px);
             left: calc(50% + ${pos.x * 10}px);
-            background: center url(https://minotar.net/helm/${
+            background-image: url(https://minotar.net/helm/${
               player.data.uuid
             }/50.png);`
               "
@@ -276,6 +276,21 @@ export default Vue.extend({
 </script>
 
 <style scoped lang="scss">
+@mixin alpha-color($desired_colour, $desired_alpha, $background_colour) {
+  $r3: red($desired_colour);
+  $g3: green($desired_colour);
+  $b3: blue($desired_colour);
+  $r2: red($background_colour);
+  $g2: green($background_colour);
+  $b2: blue($background_colour);
+  // r1 = (r3 - r2 + r2 * a1) / a1
+  $r1: ($r3 - $r2 + ($r2 * $desired_alpha)) / $desired_alpha;
+  $g1: ($g3 - $g2 + ($g2 * $desired_alpha)) / $desired_alpha;
+  $b1: ($b3 - $b2 + ($b2 * $desired_alpha)) / $desired_alpha;
+  outline: rgba($r1, $g1, $b1, $desired_alpha) 6px solid !important;
+  //box-shadow: 0 0 0 6px rgba($r1, $g1, $b1, $desired_alpha) !important;
+}
+
 .speaker {
   width: 50px;
   height: 50px;
@@ -285,6 +300,6 @@ export default Vue.extend({
   z-index: 5;
 }
 .active {
-  border: #3ac184 6px solid !important;
+  @include alpha-color(#3ac184, 0.8, white);
 }
 </style>

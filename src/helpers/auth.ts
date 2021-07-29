@@ -33,8 +33,7 @@ export function InitializeAuthComponent(
       return {
         loaded: false,
         authed: false,
-        user: {} as Player,
-        debug: process.env.NODE_ENV !== "PRODUCTION"
+        user: {} as Player
       } as InnerAuthInterface;
     },
     computed: {
