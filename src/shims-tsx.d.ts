@@ -25,5 +25,6 @@ declare global {
 declare global {
   interface Window {
     __env: typeof AppSettings;
+    audioView: typeof Vue;
   }
 }

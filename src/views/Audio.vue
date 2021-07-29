@@ -37,7 +37,7 @@
 import Vue from "vue";
 import AudioHandler from "@/components/AudioHandler.vue";
 import { AudioContext, AudioWorkletNode } from "standardized-audio-context";
-import { Player } from "@/helpers/interfaces";
+import { LogType, Player } from "@/helpers/interfaces";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -107,8 +107,11 @@ export default Vue.extend({
     }
   },
   mounted() {
-    /* eslint-disable-next-line */
-    (window as any).audioView = this;
+    if (
+      this.$auth.logType == LogType.DEBUG ||
+      this.$auth.logType == LogType.DEV
+    )
+      window.audioView = this;
   },
   async created() {
     await this.$auth.waitLoad();

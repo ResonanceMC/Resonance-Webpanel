@@ -9,7 +9,8 @@ import store from "@/store/index";
 
 export enum LogType {
   "DEBUG" = "DEBUG",
-  "ERROR" = "ERROR"
+  "ERROR" = "ERROR",
+  "DEV" = "DEV"
 }
 
 interface _PlayerPosition {
