@@ -41,7 +41,7 @@
 
 <script lang="ts">
 import Vue, { PropType } from "vue";
-const { refDistance, maxDistance } = window.__env.audioSettings;
+const { refDistance, maxDistance } = window.__env?.audioSettings;
 // import { cartesianToPolar } from "@/helpers/vectors";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
 import {

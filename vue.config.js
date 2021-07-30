@@ -1,6 +1,6 @@
-// // eslint-disable-next-line @typescript-eslint/no-var-requires
-// const { VuetifyLoaderPlugin } = require("vuetify-loader");
+/* eslint-disable @typescript-eslint/camelcase, @typescript-eslint/no-var-requires */
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const path = require("path");
 
 module.exports = {
   transpileDependencies: ["vuetify"],
@@ -46,5 +46,57 @@ module.exports = {
       args[0].workers = 4;
       return args;
     });
+  },
+  pwa: {
+    name: "Resonance: Proximity Chat",
+    themeColor: "#f0a31b",
+    appleMobileWebAppCapable: "yes",
+
+    manifestOptions: {
+      short_name: "Resonance",
+      name: "Resonance: Proximity Chat",
+      icons: [
+        {
+          src: "/img/icons/logo-192.png",
+          type: "image/png",
+          sizes: "192x192"
+        },
+        {
+          src: "/img/icons/logo-512.png",
+          type: "image/png",
+          sizes: "512x512"
+        }
+      ],
+      start_url: "/",
+      background_color: "#ffffff",
+      display: "minimal-ui",
+      scope: "/",
+      theme_color: "#f0a31b",
+      shortcuts: [
+        {
+          name: "Resonance: Audio Chat",
+          short_name: "Audio Chat",
+          description: "Open proximity chat directly",
+          url: "/audio",
+          icons: [{ src: "/img/icons/logo-192.png", sizes: "192x192" }]
+        }
+      ],
+      description: "Proximity chat mod and plugin for Minecraft servers."
+    },
+    iconPaths: {
+      favicon32: "img/icons/favicon-32.png",
+      favicon16: "img/icons/favicon-16.png",
+      appleTouchIcon: "img/icons/apple-touch-icon-152.png",
+      maskIcon: null,
+      msTileImage: null
+    },
+
+    workboxOptions: {
+      navigateFallback: "index.html",
+      // additionalManifestEntries: [
+      //   { url: "/config/settings.js", revision: null }
+      // ],
+      cleanupOutdatedCaches: true
+    }
   }
 };

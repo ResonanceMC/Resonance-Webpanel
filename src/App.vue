@@ -73,28 +73,4 @@ export default Vue.extend({
     }
   }
 });
-
-window.addEventListener("load", async () => {
-  if ("serviceWorker" in navigator) {
-    try {
-      const sw = await navigator.serviceWorker.register("service-worker.js", {
-        scope: "/"
-      });
-      const data = {
-        type: "CACHE_URLS",
-        payload: [
-          ...new Set([
-            location.href,
-            location.origin + "/offline",
-            ...performance.getEntriesByType("resource").map(r => r.name)
-          ])
-        ]
-      };
-      // console.log(sw.installing);
-      sw?.installing?.postMessage(data);
-    } catch (err) {
-      console.error("Failed to register service worker: ", err);
-    }
-  }
-});
 </script>

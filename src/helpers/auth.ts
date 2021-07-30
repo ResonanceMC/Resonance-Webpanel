@@ -1,6 +1,12 @@
 import { plainToClass } from "class-transformer";
-
-const { port: PORT, host: HOST } = window.__env.websocket;
+if (!window.__env)
+  window.__env = {
+    websocket: {
+      host: location.host,
+      port: ""
+    }
+  };
+const { port: PORT, host: HOST } = window.__env?.websocket;
 
 import router from "@/router";
 import store from "@/store/index";

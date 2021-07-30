@@ -6,6 +6,7 @@ import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import { InitializeAuthComponent } from "@/helpers/auth";
+import "./registerServiceWorker";
 
 // import _ from "lodash";
 // Object.defineProperty(Vue.prototype, "$_", { value: _ });
