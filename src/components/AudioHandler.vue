@@ -97,7 +97,7 @@ export default Vue.extend({
     },
     pos(val: PlayerPosition) {
       if (!this.stream) return;
-      if (val.distance > this.panner.maxDistance + 10) {
+      if (val.distance > this.panner.maxDistance + 20) {
         this.player.muteClientStream(true);
         this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
       } else if (this.panner) {
@@ -125,24 +125,23 @@ export default Vue.extend({
         // panner.setPosition(x, y, z);
       }
 
-      // compute distance squared for gain falloff
-      const distance = x ** 2 + y ** 2 + z ** 2;
+      // compute distance for gain falloff
+      const distance = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
 
+      // perform some *magic*
       const falloffGain =
-        ((panner.maxDistance / 2) ** 2 - distance) / panner.maxDistance ** 2 +
-        1;
+        (panner.maxDistance / 3 - distance) / panner.maxDistance + 1;
 
-      if (distance >= (panner.maxDistance / 2) ** 2 && falloffGain >= 0) {
+      if (distance >= panner.maxDistance / 3 && falloffGain >= 0) {
         this.gainNode.gain.setValueAtTime(
           falloffGain,
           this.audioCtx.currentTime
         );
-      } else if (distance < (panner.maxDistance / 2) ** 2) {
+      } else if (distance < panner.maxDistance / 3) {
         this.gainNode.gain.setValueAtTime(1, this.audioCtx.currentTime);
       } else {
         this.gainNode.gain.setValueAtTime(0, this.audioCtx.currentTime);
       }
-
       // console.log(
       //   Math.sqrt(distance),
       //   this.panner.maxDistance,

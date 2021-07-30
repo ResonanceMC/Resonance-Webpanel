@@ -12,7 +12,7 @@
     </v-btn>
     <div id="player" />
     <AudioHandler
-      v-for="player in playersInDimension"
+      v-for="player in audioPlayers"
       :key="player.data.uuid"
       :pos="player.pos"
       :stream="player.stream"
@@ -140,9 +140,9 @@ export default Vue.extend({
     }
   },
   computed: {
-    playersInDimension(): Player[] {
+    audioPlayers(): Player[] {
       return this.players.filter(
-        player => player.dimension === this.$auth.user.dimension
+        (p: Player) => p.online && p.dimension == this.$auth.user.dimension
       );
     }
   },
