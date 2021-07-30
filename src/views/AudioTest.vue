@@ -12,7 +12,7 @@
     </v-btn>
     <div id="player" />
     <AudioHandler
-      v-for="player in players"
+      v-for="player in playersInDimension"
       :key="player.data.uuid"
       :pos="player.pos"
       :stream="player.stream"
@@ -139,10 +139,18 @@ export default Vue.extend({
       }
     }
   },
-  mounted() {
+  computed: {
+    playersInDimension(): Player[] {
+      return this.players.filter(
+        player => player.dimension === this.$auth.user.dimension
+      );
+    }
+  },
+  async mounted() {
     // if (!navigator.mediaDevices)
     //   throw new Error("On unsecure connection, cannot establish microphone.");
-
+    await this.$auth.waitLoad();
+    this.players[0].dimension = this.$auth.user.dimension;
     const audioNode = document.querySelector("#music") as HTMLMediaElement;
     setTimeout(() => {
       audioNode.play().then(

@@ -135,6 +135,10 @@ export function InitializeAuthComponent(
         const data = plainToClass(UserUpdateAction, input);
 
         switch (data.type) {
+          case "dimension": {
+            this.user.dimension = data.dimension;
+            break;
+          }
           case "position": {
             if (data.pos && this.user?.pos) {
               // temporarily will add .5 to each positional axis to center to block
