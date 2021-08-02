@@ -17,6 +17,7 @@
     "register-service-worker": "^1.7.1",
     "sharp": "^0.27.2",
     "standardized-audio-context": "^25.3.0",
+    "three": "^0.131.1",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
+    "@types/three": "^0.130.1",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
     "@vue/cli-plugin-babel": "~4.5.0",

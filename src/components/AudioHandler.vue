@@ -7,25 +7,25 @@
       class="overflow-hidden"
     >
       <v-main>
-        <v-tooltip top>
-          <template v-slot:activator="{ on }">
-            <div
-              v-on="on"
-              class="speaker"
-              :class="{ active: speaking }"
-              :id="`speaker-${player.data.uuid}`"
-              :style="
-                `top: calc(50% - ${pos.z * 10}px);
-            left: calc(50% + ${pos.x * 10}px);
-            background-image: url(https://minotar.net/helm/${
-              player.data.uuid
-            }/50.png);`
-              "
-            />
-          </template>
+        <!--        <v-tooltip top>-->
+        <!--          <template v-slot:activator="{ on }">-->
+        <!--            <div-->
+        <!--              v-on="on"-->
+        <!--              class="speaker"-->
+        <!--              :class="{ active: speaking }"-->
+        <!--              :id="`speaker-${player.data.uuid}`"-->
+        <!--              :style="-->
+        <!--                `top: calc(50% - ${pos.z * 10}px);-->
+        <!--            left: calc(50% + ${pos.x * 10}px);-->
+        <!--            background-image: url(https://minotar.net/helm/${-->
+        <!--              player.data.uuid-->
+        <!--            }/50.png);`-->
+        <!--              "-->
+        <!--            />-->
+        <!--          </template>-->
 
-          <span>{{ player.data.username }}</span>
-        </v-tooltip>
+        <!--          <span>{{ player.data.username }}</span>-->
+        <!--        </v-tooltip>-->
       </v-main>
       <!--    </v-fade-transition>-->
       <v-progress-linear

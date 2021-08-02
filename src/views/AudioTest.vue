@@ -19,6 +19,7 @@
       :player="player"
       :audioCtx="audioCtx"
     />
+    <Visualizer :players="audioPlayers"></Visualizer>
 
     <audio
       id="music"
@@ -36,13 +37,14 @@ import AudioHandler from "@/components/AudioHandler.vue";
 import { AudioContext } from "standardized-audio-context";
 import { Player, PlayerPosition } from "@/helpers/interfaces";
 import { plainToClass } from "class-transformer";
+import Visualizer from "@/components/Visualizer.vue";
 
 // const AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioCtx = new AudioContext();
 
 export default Vue.extend({
-  name: "Audio",
+  name: "AudioTest",
   data() {
     return {
       manualAudio: false,
@@ -60,7 +62,7 @@ export default Vue.extend({
       ] as Player[]
     };
   },
-  components: { AudioHandler },
+  components: { Visualizer, AudioHandler },
   methods: {
     manualPlay() {
       const audioNode = document.querySelector("#music") as HTMLMediaElement;
